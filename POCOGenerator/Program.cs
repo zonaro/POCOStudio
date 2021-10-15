@@ -10,7 +10,7 @@ namespace POCOGenerator
         [STAThread]
         static int Main(string[] args)
         {
-            SqlServerTypes.Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
+            //SqlServerTypes.Utilities.LoadNativeAssemblies(AppDomain.CurrentDomain.BaseDirectory);
 
             CommandLineParsingResult<Options> parsingResult = CommandLineParser<Options>.Parse(args);
             CommandLineResult resultCode = CommandLineParser.ValidateOptions(parsingResult);
@@ -22,7 +22,7 @@ namespace POCOGenerator
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new POCOGeneratorForm());
+                Application.Run(new MainForm());
             }
             else if (resultCode == CommandLineResult.NoErrors)
             {

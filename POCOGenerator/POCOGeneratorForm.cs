@@ -19,7 +19,7 @@ using POCOGenerator.POCOWriter;
 
 namespace POCOGenerator
 {
-    public partial class POCOGeneratorForm : Form
+    public partial class POCOGeneratorForm : WeifenLuo.WinFormsUI.Docking.DockContent
     {
         #region Form
 
