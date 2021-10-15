@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "POCOGenerator", "POCOGenerator\POCOGenerator.csproj", "{E8DDFE83-72A6-4D1F-AABA-ACEF43644EBB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B25E9993-392C-4397-8B43-C91D63834C0C}"
+	ProjectSection(SolutionItems) = preProject
+		Keys.sql = Keys.sql
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E8DDFE83-72A6-4D1F-AABA-ACEF43644EBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8DDFE83-72A6-4D1F-AABA-ACEF43644EBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8DDFE83-72A6-4D1F-AABA-ACEF43644EBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8DDFE83-72A6-4D1F-AABA-ACEF43644EBB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51BEF002-E37E-4B83-84C3-A5009EA5B9C7}
+	EndGlobalSection
+EndGlobal
