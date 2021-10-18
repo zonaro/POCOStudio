@@ -10,7 +10,7 @@ namespace POCOGenerator.CommandLine
     {
         public static CommandLineResult ValidateOptions(CommandLineParsingResult<Options> parsingResult)
         {
-            // empyt args
+            // empty args
             if (parsingResult.EmptyArgs)
                 return CommandLineResult.EmptyArgs;
 

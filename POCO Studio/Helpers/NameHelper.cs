@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Db.Extensions;
+using InnerLibs;
 
 namespace Db.Helpers
 {
@@ -16,12 +17,12 @@ namespace Db.Helpers
 
         public static string GetSingularName(string name)
         {
-            return WordQuantifier(name, word => word.ToSingular());
+            return WordQuantifier(name, word => Text.QuantifyText(1, word));
         }
 
         public static string GetPluralName(string name)
         {
-            return WordQuantifier(name, word => word.ToPlural());
+            return WordQuantifier(name, word => Text.QuantifyText(2, word));
         }
 
         private static string WordQuantifier(string name, Func<string, string> quantifier)
@@ -60,7 +61,7 @@ namespace Db.Helpers
             return name.Substring(0, index) + quantifiedWord;
         }
 
-        #endregion
+        #endregion Singular & Plural
 
         #region Transform Name
 
@@ -86,7 +87,6 @@ namespace Db.Helpers
                     name += wordsSeparator;
             }
 
-
             return CleanName(name);
         }
 
@@ -104,12 +104,11 @@ namespace Db.Helpers
             return camelCaseWords;
         }
 
-        #endregion
+        #endregion Transform Name
 
         #region Clean Name
 
-
-        static string RemoveDiacritics(string text)
+        private static string RemoveDiacritics(string text)
         {
             var normalizedString = text.Normalize(NormalizationForm.FormD);
             var stringBuilder = new StringBuilder();
@@ -133,13 +132,10 @@ namespace Db.Helpers
                 name = name.Replace("  ", " ");
             }
 
-
             foreach (var item in new[] { " ", "-", ".", "~", "\\", "/", ",", "|", ":", ";", "?", "!" })
             {
                 name = name.Replace(item, "_").Trim();
             }
-
-
 
             if (name.Length > 0 && '0' <= name[0] && name[0] <= '9')
                 name = "_" + name;
@@ -149,7 +145,7 @@ namespace Db.Helpers
             return name;
         }
 
-        #endregion
+        #endregion Clean Name
 
         #region Name Prefix
 
@@ -195,7 +191,7 @@ namespace Db.Helpers
             return name;
         }
 
-        #endregion
+        #endregion Name Prefix
 
         #region Name Verbs
 
@@ -329,6 +325,6 @@ namespace Db.Helpers
             return name;
         }
 
-        #endregion
+        #endregion Name Verbs
     }
 }
