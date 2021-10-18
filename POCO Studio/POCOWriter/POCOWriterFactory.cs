@@ -14,37 +14,22 @@ namespace POCOGenerator.POCOWriter
     {
         private RichTextBox rtb;
 
-        public RichTextBoxWriterFactory(RichTextBox rtb)
-        {
-            this.rtb = rtb;
-        }
+        public RichTextBoxWriterFactory(RichTextBox rtb) => this.rtb = rtb;
 
-        public override IPOCOWriter CreatePOCOWriter()
-        {
-            return new RichTextBoxPOCOWriter(rtb);
-        }
+        public override IPOCOWriter CreatePOCOWriter() => new RichTextBoxPOCOWriter(rtb);
     }
 
     public class StringBuilderWriterFactory : POCOWriterFactory
     {
         public StringBuilder sb;
 
-        public StringBuilderWriterFactory(StringBuilder sb)
-        {
-            this.sb = sb;
-        }
+        public StringBuilderWriterFactory(StringBuilder sb) => this.sb = sb;
 
-        public override IPOCOWriter CreatePOCOWriter()
-        {
-            return new StringBuilderPOCOWriter(sb);
-        }
+        public override IPOCOWriter CreatePOCOWriter() => new StringBuilderPOCOWriter(sb);
     }
 
     public class ConsoleWriterFactory : POCOWriterFactory
     {
-        public override IPOCOWriter CreatePOCOWriter()
-        {
-            return new ConsolePOCOWriter();
-        }
+        public override IPOCOWriter CreatePOCOWriter() => new ConsolePOCOWriter();
     }
 }

@@ -25,7 +25,7 @@ namespace Db.DbObject
         public string Schema { get { return routine_schema; } }
         public string Name { get { return routine_name; } }
         public IEnumerable<IColumn> Columns { get { return (ProcedureColumns != null ? ProcedureColumns.Cast<IColumn>() : null); } }
-        public virtual DbType DbType { get { return DbType.Procedure; } }
+        public virtual POCODbType DbType { get { return POCODbType.Procedure; } }
 
         #endregion
     }

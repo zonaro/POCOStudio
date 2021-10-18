@@ -4,6 +4,6 @@ namespace Db.DbObject
 {
     public class Function : Procedure
     {
-        public override DbType DbType { get { return DbType.Function; } }
+        public override POCODbType DbType { get { return POCODbType.Function; } }
     }
 }

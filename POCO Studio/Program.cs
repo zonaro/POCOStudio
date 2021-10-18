@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Windows.Forms;
 using CommandLine;
+using POCO_Studio;
 using POCOGenerator.CommandLine;
 
 namespace POCOGenerator
 {
-    static class Program
+    public static class Program
     {
         [STAThread]
         static int Main(string[] args)
@@ -22,7 +23,7 @@ namespace POCOGenerator
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm());
+                Application.Run(MainForm);
             }
             else if (resultCode == CommandLineResult.NoErrors)
             {
@@ -33,5 +34,12 @@ namespace POCOGenerator
 
             return 0;
         }
+
+
+        public static MainForm MainForm = new MainForm();
+
+        public static POCOGeneratorForm PocoForm = new POCOGeneratorForm();
+
+        public static PropertyForm PropertyForm = new PropertyForm();
     }
 }

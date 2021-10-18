@@ -8,7 +8,7 @@ namespace Db.DbObject
         string Schema { get; }
         string Name { get; }
         IEnumerable<IColumn> Columns { get; }
-        DbType DbType { get; }
+        POCODbType DbType { get; }
         Exception Error { get; }
         Database Database { get; }
         string ClassName { get; set; }

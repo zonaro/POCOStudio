@@ -4,6 +4,6 @@ namespace Db.DbObject
 {
     public class View : Table
     {
-        public override DbType DbType { get { return DbType.View; } }
+        public override POCODbType DbType { get { return POCODbType.View; } }
     }
 }

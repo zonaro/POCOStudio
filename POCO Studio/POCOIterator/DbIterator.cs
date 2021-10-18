@@ -4,11 +4,17 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Db.DbObject;
 using Db.Helpers;
+using POCOGenerator.CommandLine;
 
 namespace Db.POCOIterator
 {
-    public class DbIterator : IPOCOIterator
+    public partial class DbIterator
     {
+
+
+        public Options POCOConfiguration { get; set; } = new Options();
+
+
         #region Constructor
 
         protected IEnumerable<IDbObjectTraverse> dbObjects;
@@ -138,10 +144,39 @@ namespace Db.POCOIterator
             pocoWriter.WriteKeyword("using");
             pocoWriter.WriteLine(" System;");
 
-            if (IsNavigationProperties)
+
+            if (this.POCOConfiguration.IsEF)
+            {
+                if (dbObjects != null && dbObjects.Count() > 0)
+                {
+                    if (dbObjects.Any(o => o.DbType == POCODbType.Table))
+                    {
+                        if (this.POCOConfiguration.IsEFDescription)
+                        {
+                            pocoWriter.WriteKeyword("using");
+                            pocoWriter.WriteLine(" System.ComponentModel;");
+                        }
+
+                        pocoWriter.WriteKeyword("using");
+                        pocoWriter.WriteLine(" System.ComponentModel.DataAnnotations;");
+
+                        pocoWriter.WriteKeyword("using");
+                        pocoWriter.WriteLine(" System.ComponentModel.DataAnnotations.Schema;");
+                    }
+                }
+            }
+
+
+            if (this.POCOConfiguration.IsNavigationProperties)
             {
                 pocoWriter.WriteKeyword("using");
                 pocoWriter.WriteLine(" System.Collections.Generic;");
+            }
+
+            if (this.POCOConfiguration.IsEFCore)
+            {
+                pocoWriter.WriteKeyword("using");
+                pocoWriter.WriteLine(" Microsoft.EntityFrameworkCore;");
             }
 
             if (IsSpecialSQLTypes())
@@ -173,6 +208,314 @@ namespace Db.POCOIterator
         }
 
         #endregion
+
+
+        protected virtual bool IsCompositePrimaryKey(IDbObjectTraverse dbObject)
+        {
+            if (dbObject.Columns != null && dbObject.Columns.Count() > 0)
+            {
+                var primaryKeys = dbObject.Columns.Where(c => c.IsPrimaryKey);
+                return (primaryKeys.Count() > 1);
+            }
+            return false;
+        }
+
+        protected virtual void WriteEFPrimaryKey(string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Key");
+            pocoWriter.WriteLine("]");
+        }
+
+
+
+        protected virtual void WriteEFCompositePrimaryKey(string columnName, string dataTypeName, byte ordinal, string namespaceOffset)
+        {
+            WriteEFPrimaryKey(namespaceOffset);
+
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Column");
+            pocoWriter.Write("(");
+
+            if (this.POCOConfiguration.IsEFColumn)
+            {
+                pocoWriter.WriteString("\"");
+                pocoWriter.WriteString(columnName);
+                pocoWriter.WriteString("\"");
+                pocoWriter.Write(", TypeName = ");
+                pocoWriter.WriteString("\"");
+                pocoWriter.WriteString(dataTypeName);
+                pocoWriter.WriteString("\"");
+                pocoWriter.Write(", ");
+            }
+
+            pocoWriter.Write("Order = ");
+            pocoWriter.Write(ordinal.ToString());
+            pocoWriter.WriteLine(")]");
+        }
+
+        protected virtual void WriteEFIndex(string indexName, bool? isUnique, bool? isClustered, bool? isDescending, string namespaceOffset)
+        {
+            WriteEFIndexSortOrderError(indexName, isDescending, namespaceOffset);
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Index");
+            pocoWriter.Write("(");
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteString(indexName);
+            pocoWriter.WriteString("\"");
+            if (isUnique == true)
+            {
+                pocoWriter.Write(", IsUnique = ");
+                pocoWriter.WriteKeyword("true");
+            }
+            if (isClustered == true)
+            {
+                pocoWriter.Write(", IsClustered = ");
+                pocoWriter.WriteKeyword("true");
+            }
+            pocoWriter.WriteLine(")]");
+        }
+
+        protected virtual void WriteEFCompositeIndex(string indexName, bool? isUnique, bool? isClustered, bool? isDescending, byte ordinal, string namespaceOffset)
+        {
+            WriteEFIndexSortOrderError(indexName, isDescending, namespaceOffset);
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Index");
+            pocoWriter.Write("(");
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteString(indexName);
+            pocoWriter.WriteString("\"");
+            pocoWriter.Write(", ");
+            pocoWriter.Write(ordinal.ToString());
+            if (isUnique == true)
+            {
+                pocoWriter.Write(", IsUnique = ");
+                pocoWriter.WriteKeyword("true");
+            }
+            if (isClustered == true)
+            {
+                pocoWriter.Write(", IsClustered = ");
+                pocoWriter.WriteKeyword("true");
+            }
+            pocoWriter.WriteLine(")]");
+        }
+
+        protected virtual void WriteEFIndexSortOrderError(string indexName, bool? isDescending, string namespaceOffset)
+        {
+            if (isDescending == true)
+            {
+                pocoWriter.Write(namespaceOffset);
+                pocoWriter.Write(Tab);
+                pocoWriter.WriteError("/* ");
+                pocoWriter.WriteError(indexName);
+                pocoWriter.WriteLineError(". Sort order is Descending. Index doesn't support sort order. */");
+            }
+        }
+
+        protected virtual void WriteEFColumn(string columnName, string dataTypeName, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Column");
+            //pocoWriter.Write("(Name = ");
+            pocoWriter.Write("(");
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteString(columnName);
+            pocoWriter.WriteString("\"");
+            pocoWriter.Write(", TypeName = ");
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteString(dataTypeName);
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteLine(")]");
+        }
+
+        protected virtual void WriteEFMaxLength(int? stringPrecision, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("MaxLength");
+            if (stringPrecision > 0)
+            {
+                pocoWriter.Write("(");
+                pocoWriter.Write(stringPrecision.ToString());
+                pocoWriter.Write(")");
+            }
+            pocoWriter.WriteLine("]");
+        }
+
+        protected virtual void WriteEFStringLength(int stringPrecision, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("StringLength");
+            pocoWriter.Write("(");
+            pocoWriter.Write(stringPrecision.ToString());
+            pocoWriter.Write(")");
+            pocoWriter.WriteLine("]");
+        }
+
+        protected virtual void WriteEFTimestamp(string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Timestamp");
+            pocoWriter.WriteLine("]");
+        }
+
+        protected virtual void WriteEFConcurrencyCheck(string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("ConcurrencyCheck");
+            pocoWriter.WriteLine("]");
+        }
+
+        protected virtual void WriteEFDatabaseGeneratedIdentity(string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("DatabaseGenerated");
+            pocoWriter.Write("(");
+            pocoWriter.WriteUserType("DatabaseGeneratedOption");
+            pocoWriter.WriteLine(".Identity)]");
+        }
+
+        protected virtual void WriteEFDatabaseGeneratedComputed(string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("DatabaseGenerated");
+            pocoWriter.Write("(");
+            pocoWriter.WriteUserType("DatabaseGeneratedOption");
+            pocoWriter.WriteLine(".Computed)]");
+        }
+
+        protected static readonly Regex regexDisplay1 = new Regex("[^0-9a-zA-Z]", RegexOptions.Compiled);
+        protected static readonly Regex regexDisplay2 = new Regex("([^A-Z]|^)(([A-Z\\s]*)($|[A-Z]))", RegexOptions.Compiled);
+        protected static readonly Regex regexDisplay3 = new Regex("\\s{2,}", RegexOptions.Compiled);
+
+        protected virtual string GetEFDisplay(string columnName)
+        {
+            string display = columnName;
+            display = regexDisplay1.Replace(display, " ");
+            display = regexDisplay2.Replace(display, "$1 $3 $4");
+            display = display.Trim();
+            display = regexDisplay3.Replace(display, " ");
+            return display;
+        }
+
+        protected virtual void WriteEFRequired(string display, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Required");
+            if (this.POCOConfiguration.IsEFRequiredWithErrorMessage)
+                WriteEFRequiredErrorMessage(display);
+            pocoWriter.WriteLine("]");
+        }
+
+        protected virtual void WriteEFRequiredErrorMessage(string display)
+        {
+            pocoWriter.Write("(ErrorMessage = ");
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteString(display);
+            pocoWriter.WriteString(" is required");
+            pocoWriter.WriteString("\"");
+            pocoWriter.Write(")");
+        }
+
+        protected virtual void WriteEFDisplay(string display, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Display");
+            pocoWriter.Write("(Name = ");
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteString(display);
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteLine(")]");
+        }
+
+        protected virtual void WriteEFDescription(string description, bool writeTab, string namespaceOffset)
+        {
+            if (string.IsNullOrEmpty(description) == false)
+            {
+                pocoWriter.Write(namespaceOffset);
+                if (writeTab)
+                    pocoWriter.Write(Tab);
+                pocoWriter.Write("[");
+                pocoWriter.WriteUserType("Description");
+                pocoWriter.Write("(");
+                pocoWriter.WriteString("\"");
+                pocoWriter.WriteString(description);
+                pocoWriter.WriteString("\"");
+                pocoWriter.WriteLine(")]");
+            }
+        }
+
+        protected void WriteColumnDataType(IColumn column)
+        {
+
+            if (this.POCOConfiguration.IsEF && this.POCOConfiguration.IsEFComplexType && column is IComplexType)
+                pocoWriter.WriteUserType(column.DataTypeDisplay);
+            else
+                switch ((column.DataTypeDisplay ?? string.Empty).ToLower())
+                {
+                    case "bigint": WriteColumnBigInt(column.IsNullable); break;
+                    case "binary": WriteColumnBinary(); break;
+                    case "bit": WriteColumnBit(column.IsNullable); break;
+                    case "char": WriteColumnChar(); break;
+                    case "date": WriteColumnDate(column.IsNullable); break;
+                    case "datetime": WriteColumnDateTime(column.IsNullable); break;
+                    case "datetime2": WriteColumnDateTime2(column.IsNullable); break;
+                    case "datetimeoffset": WriteColumnDateTimeOffset(column.IsNullable); break;
+                    case "decimal": WriteColumnDecimal(column.IsNullable); break;
+                    case "filestream": WriteColumnFileStream(); break;
+                    case "float": WriteColumnFloat(column.IsNullable); break;
+                    case "geography": WriteColumnGeography(); break;
+                    case "geometry": WriteColumnGeometry(); break;
+                    case "hierarchyid": WriteColumnHierarchyId(); break;
+                    case "image": WriteColumnImage(); break;
+                    case "int": WriteColumnInt(column.IsNullable); break;
+                    case "money": WriteColumnMoney(column.IsNullable); break;
+                    case "nchar": WriteColumnNChar(); break;
+                    case "ntext": WriteColumnNText(); break;
+                    case "numeric": WriteColumnNumeric(column.IsNullable); break;
+                    case "nvarchar": WriteColumnNVarChar(); break;
+                    case "real": WriteColumnReal(column.IsNullable); break;
+                    case "rowversion": WriteColumnRowVersion(); break;
+                    case "smalldatetime": WriteColumnSmallDateTime(column.IsNullable); break;
+                    case "smallint": WriteColumnSmallInt(column.IsNullable); break;
+                    case "smallmoney": WriteColumnSmallMoney(column.IsNullable); break;
+                    case "sql_variant": WriteColumnSqlVariant(); break;
+                    case "text": WriteColumnText(); break;
+                    case "time": WriteColumnTime(column.IsNullable); break;
+                    case "timestamp": WriteColumnTimeStamp(); break;
+                    case "tinyint": WriteColumnTinyInt(column.IsNullable); break;
+                    case "uniqueidentifier": WriteColumnUniqueIdentifier(column.IsNullable); break;
+                    case "varbinary": WriteColumnVarBinary(); break;
+                    case "varchar": WriteColumnVarChar(); break;
+                    case "xml": WriteColumnXml(); break;
+                    default: WriteColumnObject(); break;
+                }
+        }
 
         #region Namespace Start
 
@@ -229,9 +572,9 @@ namespace Db.POCOIterator
 
         protected virtual bool IsWriteObject(List<NavigationProperty> navigationProperties, IDbObjectTraverse dbObject)
         {
-            if (dbObject.DbType == DbType.Table)
+            if (dbObject.DbType == POCODbType.Table)
             {
-                if (IsNavigationPropertiesShowJoinTable == false)
+                if (this.POCOConfiguration.IsNavigationPropertiesShowJoinTable == false)
                 {
                     if (navigationProperties != null && navigationProperties.Count > 0)
                     {
@@ -247,13 +590,7 @@ namespace Db.POCOIterator
 
         #endregion
 
-        #region Class Attributes
 
-        protected virtual void WriteClassAttributes(IDbObjectTraverse dbObject, string namespaceOffset)
-        {
-        }
-
-        #endregion
 
         #region Class Name
 
@@ -274,7 +611,7 @@ namespace Db.POCOIterator
         public virtual bool IsSearchIgnoreCase { get; set; }
         public virtual string Suffix { get; set; }
 
-        protected virtual string GetClassName(string database, string schema, string name, DbType dbType)
+        protected virtual string GetClassName(string database, string schema, string name, POCODbType dbType)
         {
             string className = null;
 
@@ -324,7 +661,7 @@ namespace Db.POCOIterator
                 // name
                 if (IsSingular)
                 {
-                    if (dbType == DbType.Table || dbType == DbType.View || dbType == DbType.TVP)
+                    if (dbType == POCODbType.Table || dbType == POCODbType.View || dbType == POCODbType.TVP)
                         name = NameHelper.GetSingularName(name);
                 }
 
@@ -472,7 +809,7 @@ namespace Db.POCOIterator
             pocoWriter.Write(" = ");
             pocoWriter.WriteKeyword("new");
             pocoWriter.Write(" ");
-            pocoWriter.WriteUserType(IsNavigationPropertiesICollection ? "HashSet" : "List");
+            pocoWriter.WriteUserType(this.POCOConfiguration.IsNavigationPropertiesICollection ? "HashSet" : "List");
             pocoWriter.Write("<");
             pocoWriter.WriteUserType(navigationProperty.ClassName);
             pocoWriter.WriteLine(">();");
@@ -486,7 +823,7 @@ namespace Db.POCOIterator
 
         protected virtual bool HasColumnDefaults(IDbObjectTraverse dbObject)
         {
-            if (IsColumnDefaults && dbObject.DbType == DbType.Table)
+            if (IsColumnDefaults && dbObject.DbType == POCODbType.Table)
             {
                 Table table = (Table)dbObject;
                 if (table.TableColumns != null && table.TableColumns.Count > 0)
@@ -791,13 +1128,13 @@ namespace Db.POCOIterator
         protected void WriteColumnDocumentation(IColumn column, string cleanColumnName, IDbObjectTraverse dbObject, string namespaceOffset)
         {
 
-            if (IsComments)
+            if (this.POCOConfiguration.IsComments)
             {
                 pocoWriter.WriteLine(""); pocoWriter.Write(namespaceOffset); pocoWriter.Write(Tab);
                 pocoWriter.WriteComment($"//// <summary>");
 
                 pocoWriter.WriteLine(""); pocoWriter.Write(namespaceOffset); pocoWriter.Write(Tab);
-                pocoWriter.WriteComment($"//// {dbObject.DbType}: {dbObject.Name} | {column.ColumnName} {column.DataTypeName}{column.Precision} {(!IsCommentsWithoutNull ? (column.IsNullable ? "NULL" : "NOT NULL") : "")}");
+                pocoWriter.WriteComment($"//// {dbObject.DbType}: {dbObject.Name} | {column.ColumnName} {column.DataTypeName}{column.Precision} {(!this.POCOConfiguration.IsCommentsWithoutNull ? (column.IsNullable ? "NULL" : "NOT NULL") : "")}");
 
                 pocoWriter.WriteLine(""); pocoWriter.Write(namespaceOffset); pocoWriter.Write(Tab);
                 pocoWriter.WriteComment($"//// </summary>");
@@ -807,23 +1144,15 @@ namespace Db.POCOIterator
 
         }
 
-        protected virtual void WriteColumnAttributes(IColumn column, string cleanColumnName, IDbObjectTraverse dbObject, string namespaceOffset)
-        {
-        }
 
         #endregion
 
-        #region Column
 
-        public virtual bool IsProperties { get; set; }
-        public virtual bool IsVirtualProperties { get; set; }
-        public virtual bool IsOverrideProperties { get; set; }
-        public virtual bool IsAllStructNullable { get; set; }
-        public virtual bool IsComments { get; set; }
-        public virtual bool IsCommentsWithoutNull { get; set; }
-        public virtual bool IsNewLineBetweenMembers { get; set; }
 
-        protected virtual void WriteColumn(IColumn column, bool isLastColumn, IDbObjectTraverse dbObject, string namespaceOffset)
+      
+
+
+        protected virtual void WriteColumnBase(IColumn column, bool isLastColumn, IDbObjectTraverse dbObject, string namespaceOffset)
         {
             string cleanColumnName = NameHelper.CleanName(column.ColumnName);
 
@@ -847,7 +1176,7 @@ namespace Db.POCOIterator
 
             pocoWriter.WriteLine();
 
-            if (IsNewLineBetweenMembers && isLastColumn == false)
+            if (this.POCOConfiguration.IsNewLineBetweenMembers && isLastColumn == false)
                 pocoWriter.WriteLine();
         }
 
@@ -858,60 +1187,19 @@ namespace Db.POCOIterator
             pocoWriter.WriteKeyword("public");
             pocoWriter.Write(" ");
 
-            if (IsProperties && IsVirtualProperties)
+            if (this.POCOConfiguration.IsProperties && this.POCOConfiguration.IsVirtualProperties)
             {
                 pocoWriter.WriteKeyword("virtual");
                 pocoWriter.Write(" ");
             }
-            else if (IsProperties && IsOverrideProperties)
+            else if (this.POCOConfiguration.IsProperties && this.POCOConfiguration.IsOverrideProperties)
             {
                 pocoWriter.WriteKeyword("override");
                 pocoWriter.Write(" ");
             }
         }
 
-        protected virtual void WriteColumnDataType(IColumn column)
-        {
-            switch ((column.DataTypeDisplay ?? string.Empty).ToLower())
-            {
-                case "bigint": WriteColumnBigInt(column.IsNullable); break;
-                case "binary": WriteColumnBinary(); break;
-                case "bit": WriteColumnBit(column.IsNullable); break;
-                case "char": WriteColumnChar(); break;
-                case "date": WriteColumnDate(column.IsNullable); break;
-                case "datetime": WriteColumnDateTime(column.IsNullable); break;
-                case "datetime2": WriteColumnDateTime2(column.IsNullable); break;
-                case "datetimeoffset": WriteColumnDateTimeOffset(column.IsNullable); break;
-                case "decimal": WriteColumnDecimal(column.IsNullable); break;
-                case "filestream": WriteColumnFileStream(); break;
-                case "float": WriteColumnFloat(column.IsNullable); break;
-                case "geography": WriteColumnGeography(); break;
-                case "geometry": WriteColumnGeometry(); break;
-                case "hierarchyid": WriteColumnHierarchyId(); break;
-                case "image": WriteColumnImage(); break;
-                case "int": WriteColumnInt(column.IsNullable); break;
-                case "money": WriteColumnMoney(column.IsNullable); break;
-                case "nchar": WriteColumnNChar(); break;
-                case "ntext": WriteColumnNText(); break;
-                case "numeric": WriteColumnNumeric(column.IsNullable); break;
-                case "nvarchar": WriteColumnNVarChar(); break;
-                case "real": WriteColumnReal(column.IsNullable); break;
-                case "rowversion": WriteColumnRowVersion(); break;
-                case "smalldatetime": WriteColumnSmallDateTime(column.IsNullable); break;
-                case "smallint": WriteColumnSmallInt(column.IsNullable); break;
-                case "smallmoney": WriteColumnSmallMoney(column.IsNullable); break;
-                case "sql_variant": WriteColumnSqlVariant(); break;
-                case "text": WriteColumnText(); break;
-                case "time": WriteColumnTime(column.IsNullable); break;
-                case "timestamp": WriteColumnTimeStamp(); break;
-                case "tinyint": WriteColumnTinyInt(column.IsNullable); break;
-                case "uniqueidentifier": WriteColumnUniqueIdentifier(column.IsNullable); break;
-                case "varbinary": WriteColumnVarBinary(); break;
-                case "varchar": WriteColumnVarChar(); break;
-                case "xml": WriteColumnXml(); break;
-                default: WriteColumnObject(); break;
-            }
-        }
+
 
         protected virtual void WriteColumnName(string columnName)
         {
@@ -921,7 +1209,7 @@ namespace Db.POCOIterator
 
         protected virtual void WriteColumnEnd()
         {
-            if (IsProperties)
+            if (this.POCOConfiguration.IsProperties)
             {
                 pocoWriter.Write(" { ");
                 pocoWriter.WriteKeyword("get");
@@ -942,7 +1230,7 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnBigInt(bool isNullable)
         {
             pocoWriter.WriteKeyword("long");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -955,7 +1243,7 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnBit(bool isNullable)
         {
             pocoWriter.WriteKeyword("bool");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -967,35 +1255,35 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnDate(bool isNullable)
         {
             pocoWriter.WriteUserType("DateTime");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnDateTime(bool isNullable)
         {
             pocoWriter.WriteUserType("DateTime");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnDateTime2(bool isNullable)
         {
             pocoWriter.WriteUserType("DateTime");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnDateTimeOffset(bool isNullable)
         {
             pocoWriter.WriteUserType("DateTimeOffset");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnDecimal(bool isNullable)
         {
             pocoWriter.WriteKeyword("decimal");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1008,7 +1296,7 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnFloat(bool isNullable)
         {
             pocoWriter.WriteKeyword("double");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1042,14 +1330,14 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnInt(bool isNullable)
         {
             pocoWriter.WriteKeyword("int");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnMoney(bool isNullable)
         {
             pocoWriter.WriteKeyword("decimal");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1066,7 +1354,7 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnNumeric(bool isNullable)
         {
             pocoWriter.WriteKeyword("decimal");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1078,7 +1366,7 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnReal(bool isNullable)
         {
             pocoWriter.WriteUserType("Single");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1091,21 +1379,21 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnSmallDateTime(bool isNullable)
         {
             pocoWriter.WriteUserType("DateTime");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnSmallInt(bool isNullable)
         {
             pocoWriter.WriteKeyword("short");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnSmallMoney(bool isNullable)
         {
             pocoWriter.WriteKeyword("decimal");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1122,7 +1410,7 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnTime(bool isNullable)
         {
             pocoWriter.WriteUserType("TimeSpan");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1135,14 +1423,14 @@ namespace Db.POCOIterator
         protected virtual void WriteColumnTinyInt(bool isNullable)
         {
             pocoWriter.WriteKeyword("byte");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
         protected virtual void WriteColumnUniqueIdentifier(bool isNullable)
         {
             pocoWriter.WriteUserType("Guid");
-            if (isNullable || IsAllStructNullable)
+            if (isNullable || this.POCOConfiguration.IsAllStructNullable)
                 pocoWriter.Write("?");
         }
 
@@ -1169,22 +1457,15 @@ namespace Db.POCOIterator
 
         #endregion
 
-        #endregion
+ 
 
         #region Navigation Properties
 
-        public virtual bool IsNavigationProperties { get; set; }
-        public virtual bool IsNavigationPropertiesVirtual { get; set; }
-        public virtual bool IsNavigationPropertiesOverride { get; set; }
-        public virtual bool IsNavigationPropertiesShowJoinTable { get; set; }
-        public virtual bool IsNavigationPropertiesComments { get; set; }
-        public virtual bool IsNavigationPropertiesList { get; set; }
-        public virtual bool IsNavigationPropertiesICollection { get; set; }
-        public virtual bool IsNavigationPropertiesIEnumerable { get; set; }
+  
 
         protected virtual bool IsNavigableObject(IDbObjectTraverse dbObject)
         {
-            return (IsNavigationProperties && dbObject.DbType == DbType.Table);
+            return (this.POCOConfiguration.IsNavigationProperties && dbObject.DbType == POCODbType.Table);
         }
 
         #region Get Navigation Properties
@@ -1228,7 +1509,7 @@ namespace Db.POCOIterator
                             {
                                 string className = GetClassName(dbObject.Database.ToString(), fk.Foreign_Schema, fk.Foreign_Table, dbObject.DbType);
 
-                                if (IsNavigationPropertiesShowJoinTable == false && fk.NavigationPropertiesRefToManyToMany != null)
+                                if (this.POCOConfiguration.IsNavigationPropertiesShowJoinTable == false && fk.NavigationPropertiesRefToManyToMany != null)
                                 {
                                     foreach (var np in fk.NavigationPropertiesRefToManyToMany)
                                     {
@@ -1266,7 +1547,9 @@ namespace Db.POCOIterator
                 }
             }
 
+            GetNavigationPropertiesMultipleRelationships(navigationProperties);
             return navigationProperties;
+
         }
 
         protected static readonly Regex regexEndNumber = new Regex("(\\d+)$", RegexOptions.Compiled);
@@ -1311,7 +1594,7 @@ namespace Db.POCOIterator
             {
                 if (navigationProperties != null && navigationProperties.Count > 0)
                 {
-                    if (IsNewLineBetweenMembers == false)
+                    if (this.POCOConfiguration.IsNewLineBetweenMembers == false)
                         pocoWriter.WriteLine();
 
                     foreach (var np in navigationProperties)
@@ -1322,7 +1605,7 @@ namespace Db.POCOIterator
 
         protected virtual void WriteNavigationProperty(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
         {
-            if (IsNewLineBetweenMembers)
+            if (this.POCOConfiguration.IsNewLineBetweenMembers)
                 pocoWriter.WriteLine();
 
             WriteNavigationPropertyComments(navigationProperty, dbObject, namespaceOffset);
@@ -1337,7 +1620,7 @@ namespace Db.POCOIterator
 
         protected virtual void WriteNavigationPropertyComments(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
         {
-            if (IsNavigationPropertiesComments)
+            if (this.POCOConfiguration.IsNavigationPropertiesComments)
             {
                 pocoWriter.Write(namespaceOffset);
                 pocoWriter.Write(Tab);
@@ -1363,9 +1646,7 @@ namespace Db.POCOIterator
             }
         }
 
-        protected virtual void WriteNavigationPropertyAttributes(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
-        {
-        }
+
 
         protected virtual void WriteNavigationPropertySingle(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
         {
@@ -1380,11 +1661,11 @@ namespace Db.POCOIterator
         protected virtual void WriteNavigationPropertyMultiple(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
         {
             WriteNavigationPropertyStart(namespaceOffset);
-            if (IsNavigationPropertiesList)
+            if (this.POCOConfiguration.IsNavigationPropertiesList)
                 pocoWriter.WriteUserType("List");
-            else if (IsNavigationPropertiesICollection)
+            else if (this.POCOConfiguration.IsNavigationPropertiesICollection)
                 pocoWriter.WriteUserType("ICollection");
-            else if (IsNavigationPropertiesIEnumerable)
+            else if (this.POCOConfiguration.IsNavigationPropertiesIEnumerable)
                 pocoWriter.WriteUserType("IEnumerable");
             pocoWriter.Write("<");
             pocoWriter.WriteUserType(navigationProperty.ClassName);
@@ -1401,12 +1682,12 @@ namespace Db.POCOIterator
             pocoWriter.WriteKeyword("public");
             pocoWriter.Write(" ");
 
-            if (IsProperties && IsNavigationPropertiesVirtual)
+            if (this.POCOConfiguration.IsProperties && this.POCOConfiguration.IsNavigationPropertiesVirtual)
             {
                 pocoWriter.WriteKeyword("virtual");
                 pocoWriter.Write(" ");
             }
-            else if (IsProperties && IsNavigationPropertiesOverride)
+            else if (this.POCOConfiguration.IsProperties && this.POCOConfiguration.IsNavigationPropertiesOverride)
             {
                 pocoWriter.WriteKeyword("override");
                 pocoWriter.Write(" ");
@@ -1415,7 +1696,7 @@ namespace Db.POCOIterator
 
         protected virtual void WriteNavigationPropertyEnd()
         {
-            if (IsProperties)
+            if (this.POCOConfiguration.IsProperties)
             {
                 pocoWriter.Write(" { ");
                 pocoWriter.WriteKeyword("get");
@@ -1437,6 +1718,13 @@ namespace Db.POCOIterator
 
         protected virtual void WriteClassEnd(IDbObjectTraverse dbObject, string namespaceOffset)
         {
+
+            if (this.POCOConfiguration.IsEF && dbObject.DbType == POCODbType.Table && this.POCOConfiguration.IsEFComplexType)
+            {
+                if (complexTypeColumns != null && complexTypeColumns.Count > 0)
+                    WriteComplexTypes(dbObject, namespaceOffset);
+            }
+
             pocoWriter.Write(namespaceOffset);
             pocoWriter.WriteLine("}");
         }
@@ -1452,5 +1740,318 @@ namespace Db.POCOIterator
         }
 
         #endregion
+
+
+
+
+
+
+        #region Class Attributes
+
+        protected void WriteClassAttributes(IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            if (this.POCOConfiguration.IsEF && dbObject.DbType == POCODbType.Table)
+            {
+                WriteEFTable(dbObject, namespaceOffset);
+
+                if (this.POCOConfiguration.IsEFDescription)
+                {
+                    Table table = (Table)dbObject;
+                    if (table.HasExtendedProperties)
+                    {
+                        foreach (ExtendedProperty extendedProperty in table.ExtendedProperties)
+                            WriteEFDescription(extendedProperty.Description, false, namespaceOffset);
+                    }
+                }
+            }
+        }
+
+        protected virtual void WriteEFTable(IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("Table");
+            pocoWriter.Write("(");
+            pocoWriter.WriteString("\"");
+            if (dbObject.Schema != "dbo")
+            {
+                pocoWriter.WriteString(dbObject.Schema);
+                pocoWriter.WriteString(".");
+            }
+            pocoWriter.WriteString(dbObject.Name);
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteLine(")]");
+        }
+
+        #endregion
+
+        #region Column Attributes
+
+        protected void WriteColumnAttributes(IColumn column, string cleanColumnName, IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            if (this.POCOConfiguration.IsEF && dbObject.DbType == POCODbType.Table)
+            {
+                // Primary Key
+                bool isCompositePrimaryKey = IsCompositePrimaryKey(dbObject);
+                if (column.IsPrimaryKey)
+                {
+                    if (!isCompositePrimaryKey)
+                        WriteEFCompositePrimaryKey(column.ColumnName, column.DataTypeName, ((TableColumn)column).PrimaryKey.Ordinal, namespaceOffset);
+                    else
+                        WriteEFPrimaryKey(namespaceOffset);
+                }
+                else
+                {
+                    // Column
+                    //if ((IsEFColumn && (column.IsPrimaryKey == false || isCompositePrimaryKey == false)) || (column.ColumnName != cleanColumnName))
+                    if (column is IComplexType == false)
+                        WriteEFColumn(column.ColumnName, column.DataTypeName, namespaceOffset);
+                }
+
+                // Index
+                if (this.POCOConfiguration.IsEFIndex && column.HasIndexColumns)
+                {
+                    TableColumn tableColumn = (TableColumn)column;
+                    foreach (IndexColumn indexColumn in tableColumn.IndexColumns.OrderBy(ic => ic.Name))
+                    {
+                        bool isCompositeIndex = tableColumn.Table.TableColumns.Exists(tc => tc != tableColumn && tc.HasIndexColumns && tc.IndexColumns.Exists(ic => ic.Name == indexColumn.Name));
+                        if (isCompositeIndex)
+                            WriteEFCompositeIndex(indexColumn.Name, indexColumn.Is_Unique, indexColumn.Is_Clustered, indexColumn.Is_Descending, indexColumn.Ordinal, namespaceOffset);
+                        else
+                            WriteEFIndex(indexColumn.Name, indexColumn.Is_Unique, indexColumn.Is_Clustered, indexColumn.Is_Descending, namespaceOffset);
+                    }
+                }
+
+
+                // MaxLength
+                if (column.DataTypeName == "binary" || column.DataTypeName == "char" || column.DataTypeName == "nchar" || column.DataTypeName == "nvarchar" || column.DataTypeName == "varbinary" || column.DataTypeName == "varchar")
+                    WriteEFMaxLength(column.StringPrecision, namespaceOffset);
+
+                // StringLength
+                if (this.POCOConfiguration.IsEFStringLength)
+                {
+                    if (column.DataTypeName == "binary" || column.DataTypeName == "char" || column.DataTypeName == "nchar" || column.DataTypeName == "nvarchar" || column.DataTypeName == "varbinary" || column.DataTypeName == "varchar")
+                    {
+                        if (column.StringPrecision > 0)
+                            WriteEFStringLength(column.StringPrecision.Value, namespaceOffset);
+                    }
+                }
+
+                // Timestamp
+                if (column.DataTypeName == "timestamp")
+                    WriteEFTimestamp(namespaceOffset);
+
+                // ConcurrencyCheck
+                if (this.POCOConfiguration.IsEFConcurrencyCheck)
+                {
+                    if (column.DataTypeName == "timestamp" || column.DataTypeName == "rowversion")
+                        WriteEFConcurrencyCheck(namespaceOffset);
+                }
+
+                // DatabaseGenerated Identity
+                if (column.IsIdentity == true)
+                    WriteEFDatabaseGeneratedIdentity(namespaceOffset);
+
+                // DatabaseGenerated Computed
+                if (column.IsComputed)
+                    WriteEFDatabaseGeneratedComputed(namespaceOffset);
+
+                string display = null;
+                if (this.POCOConfiguration.IsEFRequiredWithErrorMessage || this.POCOConfiguration.IsEFDisplay)
+                    display = GetEFDisplay(column.ColumnName);
+
+                // Required
+                if (this.POCOConfiguration.IsEFRequired || this.POCOConfiguration.IsEFRequiredWithErrorMessage)
+                {
+                    if (column.IsNullable == false)
+                        WriteEFRequired(display, namespaceOffset);
+                }
+
+                // Display
+                if (this.POCOConfiguration.IsEFDisplay)
+                    WriteEFDisplay(display, namespaceOffset);
+
+                // Description
+                if (this.POCOConfiguration.IsEFDescription)
+                {
+                    TableColumn tableColumn = (TableColumn)column;
+
+                    if (tableColumn.HasExtendedProperties)
+                    {
+                        foreach (ExtendedProperty extendedProperty in tableColumn.ExtendedProperties)
+                            WriteEFDescription(extendedProperty.Description, true, namespaceOffset);
+                    }
+
+                    /*if (IsEFIndex && tableColumn.HasIndexColumns)
+                    {
+                        foreach (IndexColumn indexColumn in tableColumn.IndexColumns.OrderBy(ic => ic.Name))
+                        {
+                            if (indexColumn.HasExtendedProperties)
+                            {
+                                foreach (ExtendedProperty extendedProperty in indexColumn.ExtendedProperties)
+                                    WriteEFDescription(extendedProperty.Description, true, namespaceOffset);
+                            }
+                        }
+                    }*/
+                }
+            }
+        }
+
+        #endregion
+
+        #region Column
+
+        private List<string> complexTypeNames;
+        private List<ComplexTypeColumn> complexTypeColumns;
+
+        protected void WriteColumn(IColumn column, bool isLastColumn, IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            if (this.POCOConfiguration.IsEF && dbObject.DbType == POCODbType.Table && this.POCOConfiguration.IsEFComplexType)
+            {
+                string columnName = column.ColumnName.Trim();
+                int index = columnName.IndexOf('_');
+                if (index != -1 && index != 0 && index != columnName.Length - 1)
+                {
+                    string complexTypeName = NameHelper.CleanName(columnName.Substring(0, index));
+                    string complexTypeColumnName = columnName.Substring(index + 1);
+
+                    if (complexTypeNames == null)
+                        complexTypeNames = new List<string>();
+                    if (complexTypeNames.Contains(complexTypeName) == false)
+                    {
+                        ComplexType complexType = new ComplexType(complexTypeName, (TableColumn)column);
+                        WriteColumnBase(complexType, isLastColumn, dbObject, namespaceOffset);
+                        complexTypeNames.Add(complexTypeName);
+                    }
+
+                    ComplexTypeColumn complexTypeColumn = new ComplexTypeColumn(complexTypeName, complexTypeColumnName, (TableColumn)column);
+                    if (complexTypeColumns == null)
+                        complexTypeColumns = new List<ComplexTypeColumn>();
+                    complexTypeColumns.Add(complexTypeColumn);
+                }
+                else
+                {
+                    WriteColumnBase(column, isLastColumn, dbObject, namespaceOffset);
+                }
+            }
+            else
+            {
+                WriteColumnBase(column, isLastColumn, dbObject, namespaceOffset);
+            }
+        }
+
+
+
+        #endregion
+
+        #region Navigation Properties
+
+
+
+        protected virtual void GetNavigationPropertiesMultipleRelationships(List<NavigationProperty> navigationProperties)
+        {
+            if (navigationProperties != null && navigationProperties.Count > 0)
+            {
+                var multipleRels = navigationProperties
+                    .GroupBy(np => new
+                    {
+                        np.ForeignKey.Foreign_Schema_Id,
+                        np.ForeignKey.Foreign_Table_Id,
+                        np.ForeignKey.Primary_Schema_Id,
+                        np.ForeignKey.Primary_Table_Id
+                    })
+                    .Where(g => g.Count() > 1)
+                    .SelectMany(g => g);
+
+                foreach (var np in multipleRels)
+                    np.HasMultipleRelationships = true;
+            }
+        }
+
+        protected void WriteNavigationPropertyAttributes(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            if (this.POCOConfiguration.IsEF && this.POCOConfiguration.IsEFForeignKey)
+            {
+                if (IsNavigableObject(dbObject))
+                {
+                    if (navigationProperty.IsRefFrom)
+                        WriteNavigationPropertyForeignKeyAttribute(navigationProperty, dbObject, namespaceOffset);
+
+                    if (navigationProperty.IsRefFrom == false && navigationProperty.HasMultipleRelationships)
+                        WriteNavigationPropertyInversePropertyAttribute(navigationProperty, dbObject, namespaceOffset);
+                }
+            }
+        }
+
+        protected virtual void WriteNavigationPropertyForeignKeyAttribute(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("ForeignKey");
+            pocoWriter.Write("(");
+            pocoWriter.WriteString("\"");
+            if (navigationProperty.HasMultipleRelationships)
+                pocoWriter.WriteString(navigationProperty.ForeignKey.Foreign_Column);
+            else
+                pocoWriter.WriteString(navigationProperty.ForeignKey.Primary_Column);
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteLine(")]");
+        }
+
+        protected virtual void WriteNavigationPropertyInversePropertyAttribute(NavigationProperty navigationProperty, IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("InverseProperty");
+            pocoWriter.Write("(");
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteString(navigationProperty.InverseProperty.ToString());
+            pocoWriter.WriteString("\"");
+            pocoWriter.WriteLine(")]");
+        }
+
+        #endregion
+
+        #region Class End
+
+
+
+        protected virtual void WriteComplexTypes(IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            var complexTypes = complexTypeColumns.GroupBy(x => x.ComplexTypeName);
+            foreach (var complexType in complexTypes)
+                WriteComplexType(complexType.Key, complexType, dbObject, namespaceOffset);
+        }
+
+        protected virtual void WriteComplexType(string complexTypeName, IEnumerable<ComplexTypeColumn> complexTypeColumns, IDbObjectTraverse dbObject, string namespaceOffset)
+        {
+            pocoWriter.WriteLine();
+
+            // Class Attribute
+            pocoWriter.Write(namespaceOffset);
+            pocoWriter.Write(Tab);
+            pocoWriter.Write("[");
+            pocoWriter.WriteUserType("ComplexType");
+            pocoWriter.WriteLine("]");
+
+            namespaceOffset += Tab;
+
+            // Class Start
+            WriteClassStart(complexTypeName, dbObject, namespaceOffset);
+
+            // Columns
+            var columns = complexTypeColumns.OrderBy<IColumn, int>(c => c.ColumnOrdinal ?? 0);
+            var lastColumn = columns.Last();
+            foreach (IColumn column in columns)
+                WriteColumn(column, column == lastColumn, dbObject, namespaceOffset);
+
+            // Class End
+            WriteClassEnd(dbObject, namespaceOffset);
+        }
+
+        #endregion
     }
+
 }

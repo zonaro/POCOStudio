@@ -2,7 +2,7 @@
 
 namespace Db.DbObject
 {
-    public enum DbType
+    public enum POCODbType
     {
         None,
         Server,

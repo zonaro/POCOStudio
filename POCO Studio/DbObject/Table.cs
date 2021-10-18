@@ -27,7 +27,7 @@ namespace Db.DbObject
         public string Schema { get { return table_schema; } }
         public string Name { get { return table_name; } }
         public IEnumerable<IColumn> Columns { get { return (TableColumns != null ? TableColumns.Cast<IColumn>() : null); } }
-        public virtual DbType DbType { get { return DbType.Table; } }
+        public virtual POCODbType DbType { get { return POCODbType.Table; } }
 
         #endregion
     }

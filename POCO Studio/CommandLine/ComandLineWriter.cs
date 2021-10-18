@@ -191,77 +191,21 @@ namespace POCOGenerator.CommandLine
 
         private void IterateDbObjects(IDbObjectTraverse dbObject, StringBuilder sb)
         {
-            IPOCOIterator iterator = GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb);
+            DbIterator iterator = GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb);
             iterator.Iterate();
         }
 
         private void IterateDbObjects(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb)
         {
-            IPOCOIterator iterator = GetPOCOIterator(dbObjects, sb);
+            DbIterator iterator = GetPOCOIterator(dbObjects, sb);
             iterator.Iterate();
         }
 
-        private IPOCOIterator GetPOCOIterator(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb)
+        private DbIterator GetPOCOIterator(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb)
         {
             IPOCOWriter writer = new StringBuilderWriterFactory(sb).CreatePOCOWriter();
-            IPOCOIterator iterator = null;
-            if (options.IsEF)
-                iterator = new EFIteratorFactory().CreateIterator(dbObjects, writer);
-            else
-                iterator = new DbIteratorFactory().CreateIterator(dbObjects, writer);
-
-            iterator.IsProperties = options.IsProperties;
-            iterator.IsVirtualProperties = options.IsVirtualProperties;
-            iterator.IsPartialClass = options.IsPartialClass;
-            iterator.IsAllStructNullable = options.IsAllStructNullable;
-            iterator.IsComments = options.IsComments;
-            iterator.IsCommentsWithoutNull = options.IsCommentsWithoutNull;
-            iterator.IsUsing = options.IsUsing;
-            iterator.Namespace = options.Namespace;
-            iterator.Inherit = options.Inherit;
-            iterator.Tab = options.Tab;
-            iterator.IsNewLineBetweenMembers = options.IsNewLineBetweenMembers;
-            iterator.IsNavigationProperties = options.IsNavigationProperties;
-            iterator.IsNavigationPropertiesVirtual = options.IsNavigationPropertiesVirtual;
-            iterator.IsNavigationPropertiesComments = options.IsNavigationPropertiesComments;
-            iterator.IsNavigationPropertiesList = options.IsNavigationPropertiesList;
-            iterator.IsNavigationPropertiesICollection = options.IsNavigationPropertiesICollection;
-            iterator.IsNavigationPropertiesIEnumerable = options.IsNavigationPropertiesIEnumerable;
-            iterator.IsNavigationPropertiesShowJoinTable = options.IsNavigationPropertiesShowJoinTable;
-            iterator.IsSingular = options.IsSingular;
-            iterator.IsIncludeDB = options.IsIncludeDB;
-            iterator.DBSeparator = options.DBSeparator;
-            iterator.IsIncludeSchema = options.IsIncludeSchema;
-            iterator.IsIgnoreDboSchema = options.IsIgnoreDboSchema;
-            iterator.SchemaSeparator = options.SchemaSeparator;
-            iterator.WordsSeparator = options.WordsSeparator;
-            iterator.IsCamelCase = options.IsCamelCase;
-            iterator.IsUpperCase = options.IsUpperCase;
-            iterator.IsLowerCase = options.IsLowerCase;
-            iterator.Search = options.Search;
-            iterator.Replace = options.Replace;
-            iterator.IsSearchIgnoreCase = options.IsSearchIgnoreCase;
-            iterator.FixedClassName = options.FixedClassName;
-            iterator.Prefix = options.Prefix;
-            iterator.Suffix = options.Suffix;
-
-            if (iterator is IEFIterator)
-            {
-                IEFIterator efIterator = iterator as IEFIterator;
-                efIterator.IsEF = options.IsEF;
-                efIterator.IsEFColumn = options.IsEFColumn;
-                efIterator.IsEFRequired = options.IsEFRequired;
-                efIterator.IsEFRequiredWithErrorMessage = options.IsEFRequiredWithErrorMessage;
-                efIterator.IsEFConcurrencyCheck = options.IsEFConcurrencyCheck;
-                efIterator.IsEFStringLength = options.IsEFStringLength;
-                efIterator.IsEFDisplay = options.IsEFDisplay;
-                efIterator.IsEFDescription = options.IsEFDescription;
-                efIterator.IsEFComplexType = options.IsEFComplexType;
-                efIterator.IsEFIndex = options.IsEFIndex;
-                efIterator.IsEFForeignKey = options.IsEFForeignKey;
-            }
-
-            return iterator;
+            return Program.PropertyForm.Iterator;
+          
         }
     }
 }

@@ -9,6 +9,10 @@ namespace POCOGenerator.CommandLine
     [Serializable]
     public class Options
     {
+
+
+
+
         #region Connection String
 
         [Option("ConnectionString", "Connection String")]
@@ -19,13 +23,16 @@ namespace POCOGenerator.CommandLine
 
         #region POCO
 
+
+
+
         [Option("Properties", "Properties", Default: true, MutuallyExclusiveSet: "Set1")]
         [Switch('P')]
         public bool IsProperties { get; set; }
 
         [Option("DataMembers", "Data Members", MutuallyExclusiveSet: "Set1")]
         [Switch("DM")]
-        public bool IsDataMembers { get; set; }
+        public bool IsDataMembers { get => !IsProperties; set => IsProperties = !value; }
 
         [Option("VirtualProperties", "Virtual Properties")]
         [Switch("VP")]
@@ -50,6 +57,9 @@ namespace POCOGenerator.CommandLine
         [Option("CommentsWithoutNull", "Comments Without Null")]
         [Switch("CWN")]
         public bool IsCommentsWithoutNull { get; set; }
+
+
+
 
         [Option("Using", "using")]
         [Switch('U')]
@@ -78,6 +88,8 @@ namespace POCOGenerator.CommandLine
         #endregion
 
         #region Navigation Properties
+
+
 
         [Option("NP", "Navigation Properties")]
         public bool IsNavigationProperties { get; set; }
@@ -109,6 +121,7 @@ namespace POCOGenerator.CommandLine
         [Option("NPIEnumerable", "Navigation Properties IEnumerable", MutuallyExclusiveSet: "Set2")]
         [Switch("NPIE")]
         public bool IsNavigationPropertiesIEnumerable { get; set; }
+
 
         #endregion
 
@@ -181,6 +194,11 @@ namespace POCOGenerator.CommandLine
         #endregion
 
         #region EF Code-First Annotations
+
+        [Option("EFCore", "Entity Framework Core")]
+
+        public bool IsEFCore { get; set; }
+
 
         [Option("EF", "Entity Framework")]
         public bool IsEF { get; set; }
@@ -371,5 +389,11 @@ namespace POCOGenerator.CommandLine
         public List<string> ExcludeTVPs { get; set; }
 
         #endregion
+
+
+
+
+
+
     }
 }

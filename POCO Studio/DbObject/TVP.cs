@@ -28,7 +28,7 @@ namespace Db.DbObject
         public string Schema { get { return tvp_schema; } }
         public string Name { get { return tvp_name; } }
         public IEnumerable<IColumn> Columns { get { return (TVPColumns != null ? TVPColumns.Cast<IColumn>() : null); } }
-        public DbType DbType { get { return DbType.TVP; } }
+        public POCODbType DbType { get { return POCODbType.TVP; } }
 
         #endregion
     }

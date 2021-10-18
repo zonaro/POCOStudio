@@ -66,9 +66,9 @@ namespace Db.Helpers
                 {
                     connection.Open();
                     List<Database> databases =
-                        connection.GetSchema("Databases").ToList<Database>().
-                        Where(d => d.database_name != "master" && d.database_name != "model" && d.database_name != "msdb" && d.database_name != "tempdb").
-                        Where(d => string.IsNullOrEmpty(initialCatalog) || string.Compare(d.database_name, initialCatalog, true) == 0).ToList<Database>();
+                        connection.GetSchema("Databases").ToList<Database>()
+                        .Where(d => d.database_name != "master" && d.database_name != "model" && d.database_name != "msdb" && d.database_name != "tempdb")
+                        .Where(d => string.IsNullOrEmpty(initialCatalog) || string.Compare(d.database_name, initialCatalog, true) == 0).ToList();
                     return databases;
                 }
             }

@@ -11,15 +11,16 @@ using Db;
 using Db.DbObject;
 using Db.Helpers;
 using Db.POCOIterator;
+using InnerLibs;
 using Microsoft.Data.ConnectionUI;
 using POCOGenerator.CommandLine;
 using POCOGenerator.Extensions;
 using POCOGenerator.Helpers;
 using POCOGenerator.POCOWriter;
-
+using WeifenLuo.WinFormsUI.Docking;
 namespace POCOGenerator
 {
-    public partial class POCOGeneratorForm : WeifenLuo.WinFormsUI.Docking.DockContent
+    public partial class POCOGeneratorForm : DockContent
     {
         #region Form
 
@@ -30,9 +31,8 @@ namespace POCOGenerator
 
         private void POCOGeneratorForm_Load(object sender, EventArgs e)
         {
-            IsProperties = true;
-            IsNavigationPropertiesList = true;
-            LoadOptions();
+
+
         }
 
         private void POCOGeneratorForm_Shown(object sender, EventArgs e)
@@ -51,7 +51,7 @@ namespace POCOGenerator
 
         private void POCOGeneratorForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            SaveOptions();
+
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -74,7 +74,7 @@ namespace POCOGenerator
 
                 try
                 {
-                    if (string.IsNullOrEmpty(connectionString) == false)
+                    if (connectionString.IsNotBlank())
                         dcd.ConnectionString = connectionString;
                 }
                 catch
@@ -150,11 +150,7 @@ namespace POCOGenerator
         private Server Server;
         private string InitialCatalog;
 
-        private class NodeTag
-        {
-            public DbType NodeType { get; set; }
-            public IDbObject DbObject { get; set; }
-        }
+
 
         private enum ImageType
         {
@@ -257,14 +253,17 @@ namespace POCOGenerator
 
                 EnableServerTree();
 
-                
+
             }
             catch (Exception ex)
             {
-                toolStripStatusLabel.Text = (ex.Message + (ex.InnerException != null ? " " + ex.InnerException.Message : string.Empty)).Replace(Environment.NewLine, " ");
+                toolStripStatusLabel.Text = ex.ToFullExceptionString();
                 toolStripStatusLabel.ForeColor = Color.Red;
             }
         }
+
+
+        public ToolStripStatusLabel toolStripStatusLabel => Program.MainForm.toolStripStatusLabel;
 
         private void DisableServerTree()
         {
@@ -424,7 +423,7 @@ namespace POCOGenerator
                 serverName += ")";
             }
             TreeNode serverNode = new TreeNode(serverName);
-            serverNode.Tag = new NodeTag() { NodeType = DbType.Server, DbObject = Server };
+            serverNode.Tag = new NodeTag() { NodeType = POCODbType.Server, DbObject = Server };
             serverNode.ImageIndex = (int)ImageType.Server;
             serverNode.SelectedImageIndex = (int)ImageType.Server;
             return serverNode;
@@ -433,7 +432,7 @@ namespace POCOGenerator
         private TreeNode BuildDatabaseNode(Database database)
         {
             TreeNode databaseNode = new TreeNode(database.ToString());
-            databaseNode.Tag = new NodeTag() { NodeType = DbType.Database, DbObject = database };
+            databaseNode.Tag = new NodeTag() { NodeType = POCODbType.Database, DbObject = database };
             databaseNode.ImageIndex = (int)ImageType.Database;
             databaseNode.SelectedImageIndex = (int)ImageType.Database;
             return databaseNode;
@@ -442,7 +441,7 @@ namespace POCOGenerator
         private TreeNode BuildTablesNode(Database database)
         {
             TreeNode tablesNode = new TreeNode("Tables");
-            tablesNode.Tag = new NodeTag() { NodeType = DbType.Tables, DbObject = database };
+            tablesNode.Tag = new NodeTag() { NodeType = POCODbType.Tables, DbObject = database };
             tablesNode.ImageIndex = (int)ImageType.Folder;
             tablesNode.SelectedImageIndex = (int)ImageType.Folder;
             return tablesNode;
@@ -450,13 +449,13 @@ namespace POCOGenerator
 
         private TreeNode BuildTableNode(Table table)
         {
-            TreeNode tableNode = new TreeNode(table.ToString().Replace("dbo.",""));
-            tableNode.Tag = new NodeTag() { NodeType = DbType.Table, DbObject = table };
+            TreeNode tableNode = new TreeNode(table.ToString().Replace("dbo.", ""));
+            tableNode.Tag = new NodeTag() { NodeType = POCODbType.Table, DbObject = table };
             tableNode.ImageIndex = (int)ImageType.Table;
             tableNode.SelectedImageIndex = (int)ImageType.Table;
 
             TreeNode columnsNode = new TreeNode("Columns");
-            columnsNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+            columnsNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
             columnsNode.ImageIndex = (int)ImageType.Folder;
             columnsNode.SelectedImageIndex = (int)ImageType.Folder;
             tableNode.Nodes.Add(columnsNode);
@@ -489,7 +488,7 @@ namespace POCOGenerator
         private TreeNode BuildPrimaryKeysNode(Table table)
         {
             TreeNode primaryKeysNode = new TreeNode("Primary Keys");
-            primaryKeysNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+            primaryKeysNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
             primaryKeysNode.ImageIndex = (int)ImageType.Folder;
             primaryKeysNode.SelectedImageIndex = (int)ImageType.Folder;
 
@@ -497,7 +496,7 @@ namespace POCOGenerator
             foreach (string primaryKey in primaryKeys)
             {
                 TreeNode columnNode = new TreeNode(primaryKey);
-                columnNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+                columnNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
                 columnNode.ImageIndex = (int)ImageType.PrimaryKey;
                 columnNode.SelectedImageIndex = (int)ImageType.PrimaryKey;
                 primaryKeysNode.Nodes.Add(columnNode);
@@ -512,7 +511,7 @@ namespace POCOGenerator
         private TreeNode BuildUniqueKeysNode(Table table)
         {
             TreeNode uniqueKeysNode = new TreeNode("Unique Keys");
-            uniqueKeysNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+            uniqueKeysNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
             uniqueKeysNode.ImageIndex = (int)ImageType.Folder;
             uniqueKeysNode.SelectedImageIndex = (int)ImageType.Folder;
 
@@ -520,7 +519,7 @@ namespace POCOGenerator
             foreach (string uniqueKey in uniqueKeys)
             {
                 TreeNode columnNode = new TreeNode(uniqueKey);
-                columnNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+                columnNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
                 columnNode.ImageIndex = (int)ImageType.UniqueKey;
                 columnNode.SelectedImageIndex = (int)ImageType.UniqueKey;
                 uniqueKeysNode.Nodes.Add(columnNode);
@@ -535,7 +534,7 @@ namespace POCOGenerator
         private TreeNode BuildForeignKeysNode(Table table)
         {
             TreeNode foreignKeysNode = new TreeNode("Foreign Keys");
-            foreignKeysNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+            foreignKeysNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
             foreignKeysNode.ImageIndex = (int)ImageType.Folder;
             foreignKeysNode.SelectedImageIndex = (int)ImageType.Folder;
 
@@ -543,7 +542,7 @@ namespace POCOGenerator
             foreach (string foreignKey in foreignKeys)
             {
                 TreeNode columnNode = new TreeNode(foreignKey);
-                columnNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+                columnNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
                 columnNode.ImageIndex = (int)ImageType.ForeignKey;
                 columnNode.SelectedImageIndex = (int)ImageType.ForeignKey;
                 foreignKeysNode.Nodes.Add(columnNode);
@@ -562,7 +561,7 @@ namespace POCOGenerator
         private TreeNode BuildIndexesNode(Table table)
         {
             TreeNode indexesNode = new TreeNode("Indexes");
-            indexesNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+            indexesNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
             indexesNode.ImageIndex = (int)ImageType.Folder;
             indexesNode.SelectedImageIndex = (int)ImageType.Folder;
 
@@ -570,7 +569,7 @@ namespace POCOGenerator
             foreach (string indexColumn in indexColumns)
             {
                 TreeNode columnNode = new TreeNode(indexColumn);
-                columnNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = table };
+                columnNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = table };
                 columnNode.ImageIndex = (int)ImageType.Index;
                 columnNode.SelectedImageIndex = (int)ImageType.Index;
                 indexesNode.Nodes.Add(columnNode);
@@ -585,7 +584,7 @@ namespace POCOGenerator
         private TreeNode BuildTableColumn(TableColumn column, string postfix = null)
         {
             TreeNode tableColumnNode = new TreeNode(column.ToStringFull() + postfix);
-            tableColumnNode.Tag = new NodeTag() { NodeType = DbType.Column, DbObject = column };
+            tableColumnNode.Tag = new NodeTag() { NodeType = POCODbType.Column, DbObject = column };
             tableColumnNode.ImageIndex = (int)(column.IsPrimaryKey ? ImageType.PrimaryKey : (column.HasForeignKeys ? ImageType.ForeignKey : ImageType.Column));
             tableColumnNode.SelectedImageIndex = (int)(column.IsPrimaryKey ? ImageType.PrimaryKey : (column.HasForeignKeys ? ImageType.ForeignKey : ImageType.Column));
             return tableColumnNode;
@@ -594,7 +593,7 @@ namespace POCOGenerator
         private TreeNode BuildViewsNode(Database database)
         {
             TreeNode viewsNode = new TreeNode("Views");
-            viewsNode.Tag = new NodeTag() { NodeType = DbType.Views, DbObject = database };
+            viewsNode.Tag = new NodeTag() { NodeType = POCODbType.Views, DbObject = database };
             viewsNode.ImageIndex = (int)ImageType.Folder;
             viewsNode.SelectedImageIndex = (int)ImageType.Folder;
             return viewsNode;
@@ -603,12 +602,12 @@ namespace POCOGenerator
         private TreeNode BuildViewNode(Db.DbObject.View view)
         {
             TreeNode viewNode = new TreeNode(view.ToString().Replace("dbo.", ""));
-            viewNode.Tag = new NodeTag() { NodeType = DbType.View, DbObject = view };
+            viewNode.Tag = new NodeTag() { NodeType = POCODbType.View, DbObject = view };
             viewNode.ImageIndex = (int)ImageType.View;
             viewNode.SelectedImageIndex = (int)ImageType.View;
 
             TreeNode columnsNode = new TreeNode("Columns");
-            columnsNode.Tag = new NodeTag() { NodeType = DbType.Columns, DbObject = view };
+            columnsNode.Tag = new NodeTag() { NodeType = POCODbType.Columns, DbObject = view };
             columnsNode.ImageIndex = (int)ImageType.Folder;
             columnsNode.SelectedImageIndex = (int)ImageType.Folder;
             viewNode.Nodes.Add(columnsNode);
@@ -618,7 +617,7 @@ namespace POCOGenerator
                 foreach (TableColumn column in view.TableColumns.OrderBy(c => c.ordinal_position ?? 0))
                 {
                     TreeNode columnNode = new TreeNode(column.ToString());
-                    columnNode.Tag = new NodeTag() { NodeType = DbType.Column, DbObject = column };
+                    columnNode.Tag = new NodeTag() { NodeType = POCODbType.Column, DbObject = column };
                     columnNode.ImageIndex = (int)ImageType.Column;
                     columnNode.SelectedImageIndex = (int)ImageType.Column;
                     columnsNode.Nodes.Add(columnNode);
@@ -635,7 +634,7 @@ namespace POCOGenerator
         private TreeNode BuildProceduresNode(Database database)
         {
             TreeNode proceduresNode = new TreeNode("Stored Procedures");
-            proceduresNode.Tag = new NodeTag() { NodeType = DbType.Procedures, DbObject = database };
+            proceduresNode.Tag = new NodeTag() { NodeType = POCODbType.Procedures, DbObject = database };
             proceduresNode.ImageIndex = (int)ImageType.Folder;
             proceduresNode.SelectedImageIndex = (int)ImageType.Folder;
             return proceduresNode;
@@ -644,12 +643,12 @@ namespace POCOGenerator
         private TreeNode BuildProcedureNode(Procedure procedure)
         {
             TreeNode procedureNode = new TreeNode(procedure.ToString().Replace("dbo.", ""));
-            procedureNode.Tag = new NodeTag() { NodeType = DbType.Procedure, DbObject = procedure };
+            procedureNode.Tag = new NodeTag() { NodeType = POCODbType.Procedure, DbObject = procedure };
             procedureNode.ImageIndex = (int)ImageType.Procedure;
             procedureNode.SelectedImageIndex = (int)ImageType.Procedure;
 
             TreeNode parametersNode = new TreeNode("Parameters");
-            parametersNode.Tag = new NodeTag() { NodeType = DbType.ProcedureParameters, DbObject = procedure };
+            parametersNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureParameters, DbObject = procedure };
             parametersNode.ImageIndex = (int)ImageType.Folder;
             parametersNode.SelectedImageIndex = (int)ImageType.Folder;
             procedureNode.Nodes.Add(parametersNode);
@@ -659,7 +658,7 @@ namespace POCOGenerator
                 foreach (ProcedureParameter parameter in procedure.ProcedureParameters.OrderBy<ProcedureParameter, int>(c => c.ordinal_position ?? 0))
                 {
                     TreeNode parameterNode = new TreeNode(parameter.ToString());
-                    parameterNode.Tag = new NodeTag() { NodeType = DbType.ProcedureParameter, DbObject = parameter };
+                    parameterNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureParameter, DbObject = parameter };
                     parameterNode.ImageIndex = (int)ImageType.Column;
                     parameterNode.SelectedImageIndex = (int)ImageType.Column;
                     parametersNode.Nodes.Add(parameterNode);
@@ -667,7 +666,7 @@ namespace POCOGenerator
             }
 
             TreeNode columnsNode = new TreeNode("Columns");
-            columnsNode.Tag = new NodeTag() { NodeType = DbType.ProcedureColumns, DbObject = procedure };
+            columnsNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureColumns, DbObject = procedure };
             columnsNode.ImageIndex = (int)ImageType.Folder;
             columnsNode.SelectedImageIndex = (int)ImageType.Folder;
 
@@ -678,7 +677,7 @@ namespace POCOGenerator
                 foreach (ProcedureColumn column in procedure.ProcedureColumns.OrderBy<ProcedureColumn, int>(c => c.ColumnOrdinal ?? 0))
                 {
                     TreeNode columnNode = new TreeNode(column.ToString());
-                    columnNode.Tag = new NodeTag() { NodeType = DbType.ProcedureColumn, DbObject = column };
+                    columnNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureColumn, DbObject = column };
                     columnNode.ImageIndex = (int)ImageType.Column;
                     columnNode.SelectedImageIndex = (int)ImageType.Column;
                     columnsNode.Nodes.Add(columnNode);
@@ -695,7 +694,7 @@ namespace POCOGenerator
         private TreeNode BuildFunctionsNode(Database database)
         {
             TreeNode functionsNode = new TreeNode("Table-valued Functions");
-            functionsNode.Tag = new NodeTag() { NodeType = DbType.Functions, DbObject = database };
+            functionsNode.Tag = new NodeTag() { NodeType = POCODbType.Functions, DbObject = database };
             functionsNode.ImageIndex = (int)ImageType.Folder;
             functionsNode.SelectedImageIndex = (int)ImageType.Folder;
             return functionsNode;
@@ -704,12 +703,12 @@ namespace POCOGenerator
         private TreeNode BuildFunctionNode(Function function)
         {
             TreeNode functionNode = new TreeNode(function.ToString().Replace("dbo.", ""));
-            functionNode.Tag = new NodeTag() { NodeType = DbType.Function, DbObject = function };
+            functionNode.Tag = new NodeTag() { NodeType = POCODbType.Function, DbObject = function };
             functionNode.ImageIndex = (int)ImageType.Function;
             functionNode.SelectedImageIndex = (int)ImageType.Function;
 
             TreeNode parametersNode = new TreeNode("Parameters");
-            parametersNode.Tag = new NodeTag() { NodeType = DbType.ProcedureParameters, DbObject = function };
+            parametersNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureParameters, DbObject = function };
             parametersNode.ImageIndex = (int)ImageType.Folder;
             parametersNode.SelectedImageIndex = (int)ImageType.Folder;
             functionNode.Nodes.Add(parametersNode);
@@ -719,7 +718,7 @@ namespace POCOGenerator
                 foreach (ProcedureParameter parameter in function.ProcedureParameters.OrderBy<ProcedureParameter, int>(c => c.ordinal_position ?? 0))
                 {
                     TreeNode parameterNode = new TreeNode(parameter.ToString());
-                    parameterNode.Tag = new NodeTag() { NodeType = DbType.ProcedureParameter, DbObject = parameter };
+                    parameterNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureParameter, DbObject = parameter };
                     parameterNode.ImageIndex = (int)ImageType.Column;
                     parameterNode.SelectedImageIndex = (int)ImageType.Column;
                     parametersNode.Nodes.Add(parameterNode);
@@ -727,7 +726,7 @@ namespace POCOGenerator
             }
 
             TreeNode columnsNode = new TreeNode("Columns");
-            columnsNode.Tag = new NodeTag() { NodeType = DbType.ProcedureColumns, DbObject = function };
+            columnsNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureColumns, DbObject = function };
             columnsNode.ImageIndex = (int)ImageType.Folder;
             columnsNode.SelectedImageIndex = (int)ImageType.Folder;
 
@@ -738,7 +737,7 @@ namespace POCOGenerator
                 foreach (ProcedureColumn column in function.ProcedureColumns.OrderBy<ProcedureColumn, int>(c => c.ColumnOrdinal ?? 0))
                 {
                     TreeNode columnNode = new TreeNode(column.ToString());
-                    columnNode.Tag = new NodeTag() { NodeType = DbType.ProcedureColumn, DbObject = column };
+                    columnNode.Tag = new NodeTag() { NodeType = POCODbType.ProcedureColumn, DbObject = column };
                     columnNode.ImageIndex = (int)ImageType.Column;
                     columnNode.SelectedImageIndex = (int)ImageType.Column;
                     columnsNode.Nodes.Add(columnNode);
@@ -755,7 +754,7 @@ namespace POCOGenerator
         private TreeNode BuildTVPsNode(Database database)
         {
             TreeNode tvpsNode = new TreeNode("User-Defined Table Types");
-            tvpsNode.Tag = new NodeTag() { NodeType = DbType.TVPs, DbObject = database };
+            tvpsNode.Tag = new NodeTag() { NodeType = POCODbType.TVPs, DbObject = database };
             tvpsNode.ImageIndex = (int)ImageType.Folder;
             tvpsNode.SelectedImageIndex = (int)ImageType.Folder;
             return tvpsNode;
@@ -764,12 +763,12 @@ namespace POCOGenerator
         private TreeNode BuildTVPNode(TVP tvp)
         {
             TreeNode tvpNode = new TreeNode(tvp.ToString());
-            tvpNode.Tag = new NodeTag() { NodeType = DbType.TVP, DbObject = tvp };
+            tvpNode.Tag = new NodeTag() { NodeType = POCODbType.TVP, DbObject = tvp };
             tvpNode.ImageIndex = (int)ImageType.Table;
             tvpNode.SelectedImageIndex = (int)ImageType.Table;
 
             TreeNode columnsNode = new TreeNode("Columns");
-            columnsNode.Tag = new NodeTag() { NodeType = DbType.TVPColumns, DbObject = tvp };
+            columnsNode.Tag = new NodeTag() { NodeType = POCODbType.TVPColumns, DbObject = tvp };
             columnsNode.ImageIndex = (int)ImageType.Folder;
             columnsNode.SelectedImageIndex = (int)ImageType.Folder;
             tvpNode.Nodes.Add(columnsNode);
@@ -779,7 +778,7 @@ namespace POCOGenerator
                 foreach (TVPColumn column in tvp.TVPColumns.OrderBy<TVPColumn, int>(c => c.column_id))
                 {
                     TreeNode columnNode = new TreeNode(column.ToString());
-                    columnNode.Tag = new NodeTag() { NodeType = DbType.TVPColumn, DbObject = column };
+                    columnNode.Tag = new NodeTag() { NodeType = POCODbType.TVPColumn, DbObject = column };
                     columnNode.ImageIndex = (int)ImageType.Column;
                     columnNode.SelectedImageIndex = (int)ImageType.Column;
                     columnsNode.Nodes.Add(columnNode);
@@ -799,20 +798,20 @@ namespace POCOGenerator
 
         private void trvServer_DrawNode(object sender, DrawTreeNodeEventArgs e)
         {
-            DbType nodeType = ((NodeTag)e.Node.Tag).NodeType;
+            POCODbType nodeType = ((NodeTag)e.Node.Tag).NodeType;
 
             bool isDrawCheckBox =
-                nodeType == DbType.Database ||
-                nodeType == DbType.Tables ||
-                nodeType == DbType.Views ||
-                nodeType == DbType.Procedures ||
-                nodeType == DbType.Functions ||
-                nodeType == DbType.TVPs ||
-                nodeType == DbType.Table ||
-                nodeType == DbType.View ||
-                nodeType == DbType.Procedure ||
-                nodeType == DbType.Function ||
-                nodeType == DbType.TVP;
+                nodeType == POCODbType.Database ||
+                nodeType == POCODbType.Tables ||
+                nodeType == POCODbType.Views ||
+                nodeType == POCODbType.Procedures ||
+                nodeType == POCODbType.Functions ||
+                nodeType == POCODbType.TVPs ||
+                nodeType == POCODbType.Table ||
+                nodeType == POCODbType.View ||
+                nodeType == POCODbType.Procedure ||
+                nodeType == POCODbType.Function ||
+                nodeType == POCODbType.TVP;
 
             if (isDrawCheckBox == false)
                 trvServer.HideCheckBox(e.Node);
@@ -884,7 +883,7 @@ namespace POCOGenerator
                 {
                     trvServer.SelectedNode = node;
 
-                    DbType nodeType = ((NodeTag)node.Tag).NodeType;
+                    POCODbType nodeType = ((NodeTag)node.Tag).NodeType;
 
                     bool isShowContextMenu = false;
                     removeFilterToolStripMenuItem.Visible = false;
@@ -899,17 +898,17 @@ namespace POCOGenerator
                     refreshToolStripMenuItem.Visible = false;
                     refreshTableToolStripMenuItem.Visible = false;
 
-                    if (nodeType == DbType.Database)
+                    if (nodeType == POCODbType.Database)
                     {
                         isShowContextMenu = true;
                         clearCheckBoxesToolStripMenuItem.Visible = true;
                     }
                     else if (
-                        nodeType == DbType.Tables ||
-                        nodeType == DbType.Views ||
-                        nodeType == DbType.Procedures ||
-                        nodeType == DbType.Functions ||
-                        nodeType == DbType.TVPs)
+                        nodeType == POCODbType.Tables ||
+                        nodeType == POCODbType.Views ||
+                        nodeType == POCODbType.Procedures ||
+                        nodeType == POCODbType.Functions ||
+                        nodeType == POCODbType.TVPs)
                     {
                         isShowContextMenu = true;
                         removeFilterToolStripMenuItem.Visible = true;
@@ -918,14 +917,14 @@ namespace POCOGenerator
                         clearCheckBoxesToolStripMenuItem.Visible = true;
                     }
                     else if (
-                        nodeType == DbType.Table ||
-                        nodeType == DbType.View ||
-                        nodeType == DbType.Procedure ||
-                        nodeType == DbType.Function ||
-                        nodeType == DbType.TVP)
+                        nodeType == POCODbType.Table ||
+                        nodeType == POCODbType.View ||
+                        nodeType == POCODbType.Procedure ||
+                        nodeType == POCODbType.Function ||
+                        nodeType == POCODbType.TVP)
                     {
                         isShowContextMenu = true;
-                        if (nodeType == DbType.Table)
+                        if (nodeType == POCODbType.Table)
                         {
                             checkTablesConnectedFromToolStripMenuItem.Visible = true;
                             checkTablesConnectedToToolStripMenuItem.Visible = true;
@@ -943,7 +942,7 @@ namespace POCOGenerator
 
                     if (isShowContextMenu)
                     {
-                        if (nodeType == DbType.Table)
+                        if (nodeType == POCODbType.Table)
                             contextMenuTable.Show(trvServer, point);
                         else
                             contextMenu.Show(trvServer, point);
@@ -1004,12 +1003,12 @@ namespace POCOGenerator
                 if (isContains == false)
                     node.Text += filteredPostfix;
 
-                DbType nodeType = ((NodeTag)node.Tag).NodeType;
+                POCODbType nodeType = ((NodeTag)node.Tag).NodeType;
 
                 List<TreeNode> outList = new List<TreeNode>();
                 List<TreeNode> inList = new List<TreeNode>();
 
-                if (nodeType == DbType.Tables || nodeType == DbType.Views)
+                if (nodeType == POCODbType.Tables || nodeType == POCODbType.Views)
                 {
                     foreach (TreeNode child in node.Nodes)
                     {
@@ -1027,7 +1026,7 @@ namespace POCOGenerator
                             inList.Add(child);
                     }
                 }
-                else if (nodeType == DbType.Procedures || nodeType == DbType.Functions)
+                else if (nodeType == POCODbType.Procedures || nodeType == POCODbType.Functions)
                 {
                     foreach (TreeNode child in node.Nodes)
                     {
@@ -1045,7 +1044,7 @@ namespace POCOGenerator
                             inList.Add(child);
                     }
                 }
-                else if (nodeType == DbType.TVPs)
+                else if (nodeType == POCODbType.TVPs)
                 {
                     foreach (TreeNode child in node.Nodes)
                     {
@@ -1114,9 +1113,9 @@ namespace POCOGenerator
             if (node == null)
                 return;
 
-            DbType nodeType = ((NodeTag)node.Tag).NodeType;
+            POCODbType nodeType = ((NodeTag)node.Tag).NodeType;
 
-            if (nodeType == DbType.Table)
+            if (nodeType == POCODbType.Table)
             {
                 Table table = (Table)((NodeTag)node.Tag).DbObject;
                 DbHelper.GetTableSchema(table,
@@ -1131,7 +1130,7 @@ namespace POCOGenerator
                     }
                 );
             }
-            else if (nodeType == DbType.View)
+            else if (nodeType == POCODbType.View)
             {
                 Db.DbObject.View view = (Db.DbObject.View)((NodeTag)node.Tag).DbObject;
                 DbHelper.GetViewSchema(view,
@@ -1146,7 +1145,7 @@ namespace POCOGenerator
                     }
                 );
             }
-            else if (nodeType == DbType.Procedure)
+            else if (nodeType == POCODbType.Procedure)
             {
                 Procedure procedure = (Procedure)((NodeTag)node.Tag).DbObject;
                 DbHelper.GetProcedureSchema(procedure,
@@ -1161,7 +1160,7 @@ namespace POCOGenerator
                     }
                 );
             }
-            else if (nodeType == DbType.Function)
+            else if (nodeType == POCODbType.Function)
             {
                 Function function = (Function)((NodeTag)node.Tag).DbObject;
                 DbHelper.GetFunctionSchema(function,
@@ -1176,7 +1175,7 @@ namespace POCOGenerator
                     }
                 );
             }
-            else if (nodeType == DbType.TVP)
+            else if (nodeType == POCODbType.TVP)
             {
                 TVP tvp = (TVP)((NodeTag)node.Tag).DbObject;
                 DbHelper.GetTVPSchema(tvp,
@@ -1199,9 +1198,9 @@ namespace POCOGenerator
             if (node == null)
                 return;
 
-            DbType nodeType = ((NodeTag)node.Tag).NodeType;
+            POCODbType nodeType = ((NodeTag)node.Tag).NodeType;
 
-            if (nodeType == DbType.Database)
+            if (nodeType == POCODbType.Database)
             {
                 trvServer.AfterCheck -= trvServer_AfterCheck;
 
@@ -1216,11 +1215,11 @@ namespace POCOGenerator
 
                 trvServer.AfterCheck += trvServer_AfterCheck;
             }
-            else if (nodeType == DbType.Tables ||
-                nodeType == DbType.Views ||
-                nodeType == DbType.Procedures ||
-                nodeType == DbType.Functions ||
-                nodeType == DbType.TVPs)
+            else if (nodeType == POCODbType.Tables ||
+                nodeType == POCODbType.Views ||
+                nodeType == POCODbType.Procedures ||
+                nodeType == POCODbType.Functions ||
+                nodeType == POCODbType.TVPs)
             {
                 trvServer.AfterCheck -= trvServer_AfterCheck;
 
@@ -1269,9 +1268,9 @@ namespace POCOGenerator
             if (node == null)
                 return;
 
-            DbType nodeType = ((NodeTag)node.Tag).NodeType;
+            POCODbType nodeType = ((NodeTag)node.Tag).NodeType;
 
-            if (nodeType == DbType.Table)
+            if (nodeType == POCODbType.Table)
             {
                 trvServer.AfterCheck -= trvServer_AfterCheck;
 
@@ -1281,11 +1280,11 @@ namespace POCOGenerator
                 TreeNode serverNode = trvServer.Nodes[0];
                 foreach (TreeNode databaseNode in serverNode.Nodes)
                 {
-                    if (((NodeTag)databaseNode.Tag).NodeType == DbType.Database && ((NodeTag)databaseNode.Tag).DbObject == table.Database)
+                    if (((NodeTag)databaseNode.Tag).NodeType == POCODbType.Database && ((NodeTag)databaseNode.Tag).DbObject == table.Database)
                     {
                         foreach (TreeNode tablesNode in databaseNode.Nodes)
                         {
-                            if (((NodeTag)tablesNode.Tag).NodeType == DbType.Tables)
+                            if (((NodeTag)tablesNode.Tag).NodeType == POCODbType.Tables)
                             {
                                 foreach (TreeNode tableNode in tablesNode.Nodes)
                                 {
@@ -1309,591 +1308,28 @@ namespace POCOGenerator
 
         #endregion
 
-        #region POCO Options
+    
 
-        private void SetCheckBox(CheckBox chk, EventHandler checkedChangedHandler, bool isChecked)
-        {
-            chk.CheckedChanged -= checkedChangedHandler;
-            chk.Checked = isChecked;
-            chk.CheckedChanged += checkedChangedHandler;
-        }
 
-        private void SetRadioButton(RadioButton rdb, EventHandler checkedChangedHandler, bool isChecked)
-        {
-            rdb.CheckedChanged -= checkedChangedHandler;
-            rdb.Checked = isChecked;
-            rdb.CheckedChanged += checkedChangedHandler;
-        }
 
-        private void SetTextBox(TextBox txt, EventHandler textChangedHandler, string text)
-        {
-            txt.TextChanged -= textChangedHandler;
-            txt.Text = text;
-            txt.TextChanged += textChangedHandler;
-        }
-
-        #region POCO
-
-        public bool IsProperties { get; set; }
-        public bool IsVirtualProperties { get; set; }
-        public bool IsOverrideProperties { get; set; }
-        public bool IsPartialClass { get; set; }
-        public bool IsAllStructNullable { get; set; }
-        public bool IsComments { get; set; }
-        public bool IsCommentsWithoutNull { get; set; }
-        public bool IsUsing { get; set; }
-        public string Namespace { get; set; }
-        public string Inherit { get; set; }
-        public bool IsColumnDefaults { get; set; }
-        public bool IsNewLineBetweenMembers { get; set; }
-        public bool IsNavigationProperties { get; set; }
-        public bool IsNavigationPropertiesVirtual { get; set; }
-        public bool IsNavigationPropertiesOverride { get; set; }
-        public bool IsNavigationPropertiesShowJoinTable { get; set; }
-        public bool IsNavigationPropertiesComments { get; set; }
-        public bool IsNavigationPropertiesList { get; set; }
-        public bool IsNavigationPropertiesICollection { get; set; }
-        public bool IsNavigationPropertiesIEnumerable { get; set; }
-
-        private void rdbProperties_CheckedChanged(object sender, EventArgs e)
-        {
-            IsProperties = rdbProperties.Checked;
-        }
-
-        private void rdbDataMembers_CheckedChanged(object sender, EventArgs e)
-        {
-            IsProperties = !rdbDataMembers.Checked;
-        }
-
-        private void chkVirtualProperties_CheckedChanged(object sender, EventArgs e)
-        {
-            IsVirtualProperties = chkVirtualProperties.Checked;
-
-            if (IsVirtualProperties && IsOverrideProperties)
-            {
-                IsOverrideProperties = false;
-                SetCheckBox(chkOverrideProperties, chkOverrideProperties_CheckedChanged, false);
-            }
-
-        }
-
-        private void chkOverrideProperties_CheckedChanged(object sender, EventArgs e)
-        {
-            IsOverrideProperties = chkOverrideProperties.Checked;
-
-            if (IsVirtualProperties && IsOverrideProperties)
-            {
-                IsVirtualProperties = false;
-                SetCheckBox(chkVirtualProperties, chkVirtualProperties_CheckedChanged, false);
-            }
-
-        }
-
-        private void chkPartialClass_CheckedChanged(object sender, EventArgs e)
-        {
-            IsPartialClass = chkPartialClass.Checked;
-        }
-
-        private void chkAllStructNullable_CheckedChanged(object sender, EventArgs e)
-        {
-            IsAllStructNullable = chkAllStructNullable.Checked;
-        }
-
-        private void chkComments_CheckedChanged(object sender, EventArgs e)
-        {
-            IsComments = chkComments.Checked;
-
-            if (IsComments == false && IsCommentsWithoutNull)
-            {
-                IsCommentsWithoutNull = false;
-                SetCheckBox(chkCommentsWithoutNull, chkCommentsWithoutNull_CheckedChanged, false);
-            }
-
-        }
-
-        private void chkCommentsWithoutNull_CheckedChanged(object sender, EventArgs e)
-        {
-            IsCommentsWithoutNull = chkCommentsWithoutNull.Checked;
-
-            if (IsCommentsWithoutNull && IsComments == false)
-            {
-                IsComments = true;
-                SetCheckBox(chkComments, chkComments_CheckedChanged, true);
-            }
-
-        }
-
-        private void chkUsing_CheckedChanged(object sender, EventArgs e)
-        {
-            IsUsing = chkUsing.Checked;
-        }
-
-        private void txtNamespace_TextChanged(object sender, EventArgs e)
-        {
-            Namespace = txtNamespace.Text;
-        }
-
-        private void txtInherit_TextChanged(object sender, EventArgs e)
-        {
-            Inherit = txtInherit.Text;
-        }
-
-        private void chkColumnDefaults_CheckedChanged(object sender, EventArgs e)
-        {
-            IsColumnDefaults = chkColumnDefaults.Checked;
-        }
-
-        private void chkNewLineBetweenMembers_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNewLineBetweenMembers = chkNewLineBetweenMembers.Checked;
-        }
-
-        private void chkNavigationProperties_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationProperties = chkNavigationProperties.Checked;
-
-            if (IsNavigationProperties == false)
-            {
-                IsNavigationPropertiesVirtual = false;
-                SetCheckBox(chkNavigationPropertiesVirtual, chkNavigationPropertiesVirtual_CheckedChanged, false);
-
-                IsNavigationPropertiesOverride = false;
-                SetCheckBox(chkNavigationPropertiesOverride, chkNavigationPropertiesOverride_CheckedChanged, false);
-
-                IsNavigationPropertiesShowJoinTable = false;
-                SetCheckBox(chkNavigationPropertiesShowJoinTable, chkNavigationPropertiesShowJoinTable_CheckedChanged, false);
-
-                IsNavigationPropertiesComments = false;
-                SetCheckBox(chkNavigationPropertiesComments, chkNavigationPropertiesComments_CheckedChanged, false);
-
-                IsEFForeignKey = false;
-                SetCheckBox(chkEFForeignKey, chkEFForeignKey_CheckedChanged, false);
-            }
-
-
-        }
-
-        private void chkNavigationPropertiesVirtual_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationPropertiesVirtual = chkNavigationPropertiesVirtual.Checked;
-
-            if (IsNavigationPropertiesVirtual && IsNavigationProperties == false)
-            {
-                IsNavigationProperties = true;
-                SetCheckBox(chkNavigationProperties, chkNavigationProperties_CheckedChanged, true);
-            }
-
-            if (IsNavigationPropertiesVirtual && IsNavigationPropertiesOverride)
-            {
-                IsNavigationPropertiesOverride = false;
-                SetCheckBox(chkNavigationPropertiesOverride, chkNavigationPropertiesOverride_CheckedChanged, false);
-            }
-
-
-        }
-
-        private void chkNavigationPropertiesOverride_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationPropertiesOverride = chkNavigationPropertiesOverride.Checked;
-
-            if (IsNavigationPropertiesOverride && IsNavigationProperties == false)
-            {
-                IsNavigationProperties = true;
-                SetCheckBox(chkNavigationProperties, chkNavigationProperties_CheckedChanged, true);
-            }
-
-            if (IsNavigationPropertiesVirtual && IsNavigationPropertiesOverride)
-            {
-                IsNavigationPropertiesVirtual = false;
-                SetCheckBox(chkNavigationPropertiesVirtual, chkNavigationPropertiesVirtual_CheckedChanged, false);
-            }
-
-
-        }
-
-        private void chkNavigationPropertiesShowJoinTable_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationPropertiesShowJoinTable = chkNavigationPropertiesShowJoinTable.Checked;
-
-            if (IsNavigationPropertiesShowJoinTable && IsNavigationProperties == false)
-            {
-                IsNavigationProperties = true;
-                SetCheckBox(chkNavigationProperties, chkNavigationProperties_CheckedChanged, true);
-            }
-
-
-        }
-
-        private void chkNavigationPropertiesComments_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationPropertiesComments = chkNavigationPropertiesComments.Checked;
-
-            if (IsNavigationPropertiesComments && IsNavigationProperties == false)
-            {
-                IsNavigationProperties = true;
-                SetCheckBox(chkNavigationProperties, chkNavigationProperties_CheckedChanged, true);
-            }
-
-
-        }
-
-        private void rdbNavigationPropertiesList_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationPropertiesList = rdbNavigationPropertiesList.Checked;
-            IsNavigationPropertiesICollection = rdbNavigationPropertiesICollection.Checked;
-            IsNavigationPropertiesIEnumerable = rdbNavigationPropertiesIEnumerable.Checked;
-
-
-
-        }
-
-        private void rdbNavigationPropertiesICollection_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationPropertiesList = rdbNavigationPropertiesList.Checked;
-            IsNavigationPropertiesICollection = rdbNavigationPropertiesICollection.Checked;
-            IsNavigationPropertiesIEnumerable = rdbNavigationPropertiesIEnumerable.Checked;
-
-
-
-        }
-
-        private void rdbNavigationPropertiesIEnumerable_CheckedChanged(object sender, EventArgs e)
-        {
-            IsNavigationPropertiesList = rdbNavigationPropertiesList.Checked;
-            IsNavigationPropertiesICollection = rdbNavigationPropertiesICollection.Checked;
-            IsNavigationPropertiesIEnumerable = rdbNavigationPropertiesIEnumerable.Checked;
-
-
-
-        }
-
-        #endregion
-
-        #region Class Name
-
-        public bool IsSingular { get; set; }
-        public bool IsIncludeDB { get; set; }
-        public string DBSeparator { get; set; }
-        public bool IsIncludeSchema { get; set; }
-        public bool IsIgnoreDboSchema { get; set; }
-        public string SchemaSeparator { get; set; }
-        public string WordsSeparator { get; set; }
-        public bool IsCamelCase { get; set; }
-        public bool IsUpperCase { get; set; }
-        public bool IsLowerCase { get; set; }
-        public string Search { get; set; }
-        public string Replace { get; set; }
-        public bool IsSearchIgnoreCase { get; set; }
-        public string FixedClassName { get; set; }
-        public string Prefix { get; set; }
-        public string Suffix { get; set; }
-
-        private void chkSingular_CheckedChanged(object sender, EventArgs e)
-        {
-            IsSingular = chkSingular.Checked;
-
-        }
-
-        private void chkIncludeDB_CheckedChanged(object sender, EventArgs e)
-        {
-            IsIncludeDB = chkIncludeDB.Checked;
-
-        }
-
-        private void txtDBSeparator_TextChanged(object sender, EventArgs e)
-        {
-            DBSeparator = txtDBSeparator.Text;
-
-        }
-
-        private void chkIncludeSchema_CheckedChanged(object sender, EventArgs e)
-        {
-            IsIncludeSchema = chkIncludeSchema.Checked;
-
-        }
-
-        private void chkIgnoreDboSchema_CheckedChanged(object sender, EventArgs e)
-        {
-            IsIgnoreDboSchema = chkIgnoreDboSchema.Checked;
-
-        }
-
-        private void txtSchemaSeparator_TextChanged(object sender, EventArgs e)
-        {
-            SchemaSeparator = txtSchemaSeparator.Text;
-
-        }
-
-        private void txtWordsSeparator_TextChanged(object sender, EventArgs e)
-        {
-            WordsSeparator = txtWordsSeparator.Text;
-
-        }
-
-        private void chkCamelCase_CheckedChanged(object sender, EventArgs e)
-        {
-            IsCamelCase = chkCamelCase.Checked;
-
-            if (IsCamelCase)
-            {
-                IsUpperCase = false;
-                SetCheckBox(chkUpperCase, chkUpperCase_CheckedChanged, false);
-
-                IsLowerCase = false;
-                SetCheckBox(chkLowerCase, chkLowerCase_CheckedChanged, false);
-            }
-
-
-        }
-
-        private void chkUpperCase_CheckedChanged(object sender, EventArgs e)
-        {
-            IsUpperCase = chkUpperCase.Checked;
-
-            if (IsUpperCase)
-            {
-                IsCamelCase = false;
-                SetCheckBox(chkCamelCase, chkCamelCase_CheckedChanged, false);
-
-                IsLowerCase = false;
-                SetCheckBox(chkLowerCase, chkLowerCase_CheckedChanged, false);
-            }
-
-
-        }
-
-        private void chkLowerCase_CheckedChanged(object sender, EventArgs e)
-        {
-            IsLowerCase = chkLowerCase.Checked;
-
-            if (IsLowerCase)
-            {
-                IsCamelCase = false;
-                SetCheckBox(chkCamelCase, chkCamelCase_CheckedChanged, false);
-
-                IsUpperCase = false;
-                SetCheckBox(chkUpperCase, chkUpperCase_CheckedChanged, false);
-            }
-
-
-        }
-
-        private void txtSearch_TextChanged(object sender, EventArgs e)
-        {
-            Search = txtSearch.Text;
-
-        }
-
-        private void txtReplace_TextChanged(object sender, EventArgs e)
-        {
-            Replace = txtReplace.Text;
-
-        }
-
-        private void chkSearchIgnoreCase_CheckedChanged(object sender, EventArgs e)
-        {
-            IsSearchIgnoreCase = chkSearchIgnoreCase.Checked;
-
-        }
-
-        private void txtFixedClassName_TextChanged(object sender, EventArgs e)
-        {
-            FixedClassName = txtFixedClassName.Text;
-
-        }
-
-        private void txtPrefix_TextChanged(object sender, EventArgs e)
-        {
-            Prefix = txtPrefix.Text;
-
-        }
-
-        private void txtSuffix_TextChanged(object sender, EventArgs e)
-        {
-            Suffix = txtSuffix.Text;
-
-        }
-
-        #endregion
-
-        #region EF
-
-        public bool IsEF { get; set; }
-        public bool IsEFColumn { get; set; }
-        public bool IsEFRequired { get; set; }
-        public bool IsEFRequiredWithErrorMessage { get; set; }
-        public bool IsEFConcurrencyCheck { get; set; }
-        public bool IsEFStringLength { get; set; }
-        public bool IsEFDisplay { get; set; }
-        public bool IsEFDescription { get; set; }
-        public bool IsEFComplexType { get; set; }
-        public bool IsEFIndex { get; set; }
-        public bool IsEFForeignKey { get; set; }
-
-        private void chkEF_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEF = chkEF.Checked;
-
-            if (IsEF == false)
-            {
-                IsEFColumn = false;
-                SetCheckBox(chkEFColumn, chkEFColumn_CheckedChanged, false);
-
-                IsEFRequired = false;
-                SetCheckBox(chkEFRequired, chkEFRequired_CheckedChanged, false);
-
-                IsEFRequiredWithErrorMessage = false;
-                SetCheckBox(chkEFRequiredWithErrorMessage, chkEFRequiredWithErrorMessage_CheckedChanged, false);
-
-                IsEFConcurrencyCheck = false;
-                SetCheckBox(chkEFConcurrencyCheck, chkEFConcurrencyCheck_CheckedChanged, false);
-
-                IsEFStringLength = false;
-                SetCheckBox(chkEFStringLength, chkEFStringLength_CheckedChanged, false);
-
-                IsEFDisplay = false;
-                SetCheckBox(chkEFDisplay, chkEFDisplay_CheckedChanged, false);
-
-                IsEFDescription = false;
-                SetCheckBox(chkEFDescription, chkEFDescription_CheckedChanged, false);
-
-                IsEFComplexType = false;
-                SetCheckBox(chkEFComplexType, chkEFComplexType_CheckedChanged, false);
-
-                IsEFIndex = false;
-                SetCheckBox(chkEFIndex, chkEFIndex_CheckedChanged, false);
-
-                IsEFForeignKey = false;
-                SetCheckBox(chkEFForeignKey, chkEFForeignKey_CheckedChanged, false);
-            }
-
-
-        }
-
-        private void CheckEFCheckBox(bool otherEF)
-        {
-            if (otherEF && IsEF == false)
-            {
-                IsEF = true;
-                SetCheckBox(chkEF, chkEF_CheckedChanged, true);
-            }
-        }
-
-        private void chkEFColumn_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFColumn = chkEFColumn.Checked;
-            CheckEFCheckBox(IsEFColumn);
-
-        }
-
-        private void chkEFRequired_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFRequired = chkEFRequired.Checked;
-
-            if (IsEFRequired && IsEFRequiredWithErrorMessage)
-            {
-                IsEFRequiredWithErrorMessage = false;
-                SetCheckBox(chkEFRequiredWithErrorMessage, chkEFRequiredWithErrorMessage_CheckedChanged, false);
-            }
-
-            CheckEFCheckBox(IsEFRequired);
-
-
-        }
-
-        private void chkEFRequiredWithErrorMessage_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFRequiredWithErrorMessage = chkEFRequiredWithErrorMessage.Checked;
-
-            if (IsEFRequired && IsEFRequiredWithErrorMessage)
-            {
-                IsEFRequired = false;
-                SetCheckBox(chkEFRequired, chkEFRequired_CheckedChanged, false);
-            }
-
-            CheckEFCheckBox(IsEFRequiredWithErrorMessage);
-
-
-        }
-
-        private void chkEFConcurrencyCheck_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFConcurrencyCheck = chkEFConcurrencyCheck.Checked;
-            CheckEFCheckBox(IsEFConcurrencyCheck);
-
-        }
-
-        private void chkEFStringLength_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFStringLength = chkEFStringLength.Checked;
-            CheckEFCheckBox(IsEFStringLength);
-
-        }
-
-        private void chkEFDisplay_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFDisplay = chkEFDisplay.Checked;
-            CheckEFCheckBox(IsEFDisplay);
-
-        }
-
-        private void chkEFDescription_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFDescription = chkEFDescription.Checked;
-            CheckEFCheckBox(IsEFDescription);
-
-        }
-
-        private void chkEFComplexType_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFComplexType = chkEFComplexType.Checked;
-            CheckEFCheckBox(IsEFComplexType);
-
-        }
-
-        private void chkEFIndex_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFIndex = chkEFIndex.Checked;
-            CheckEFCheckBox(IsEFIndex);
-
-        }
-
-        private void chkEFForeignKey_CheckedChanged(object sender, EventArgs e)
-        {
-            IsEFForeignKey = chkEFForeignKey.Checked;
-
-            CheckEFCheckBox(IsEFForeignKey);
-
-            if (IsEFForeignKey && IsNavigationProperties == false)
-            {
-                IsNavigationProperties = true;
-                SetCheckBox(chkNavigationProperties, chkNavigationProperties_CheckedChanged, true);
-            }
-
-
-        }
-
-        #endregion
-
-        #endregion
 
         #region POCO Writer & Iterator
 
-        private void IterateDbObjects(IDbObjectTraverse dbObject, StringBuilder sb = null)
+        internal void IterateDbObjects(IDbObjectTraverse dbObject, StringBuilder sb = null)
         {
-            IPOCOIterator iterator = GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb);
+            DbIterator iterator = GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb);
             iterator.Iterate();
         }
 
-        private void IterateDbObjects(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb = null)
+        internal void IterateDbObjects(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb = null)
         {
-            IPOCOIterator iterator = GetPOCOIterator(dbObjects, sb);
+            DbIterator iterator = GetPOCOIterator(dbObjects, sb);
             iterator.Iterate();
         }
 
         private void ClearDbObjects(StringBuilder sb = null)
         {
-            IPOCOIterator iterator = GetPOCOIterator(null, sb);
+            DbIterator iterator = GetPOCOIterator(null, sb);
             iterator.Clear();
         }
 
@@ -1924,64 +1360,10 @@ namespace POCOGenerator
             }
         }
 
-        private IPOCOIterator GetPOCOIterator(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb)
+        private DbIterator GetPOCOIterator(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb)
         {
             IPOCOWriter pocoWriter = GetPOCOWriter(sb);
-            IPOCOIterator iterator = GetPOCOIterator(dbObjects, pocoWriter);
-
-            iterator.IsProperties = IsProperties;
-            iterator.IsVirtualProperties = IsVirtualProperties;
-            iterator.IsOverrideProperties = IsOverrideProperties;
-            iterator.IsPartialClass = IsPartialClass;
-            iterator.IsAllStructNullable = IsAllStructNullable;
-            iterator.IsComments = IsComments;
-            iterator.IsCommentsWithoutNull = IsCommentsWithoutNull;
-            iterator.IsUsing = IsUsing;
-            iterator.Namespace = Namespace;
-            iterator.Inherit = Inherit;
-            iterator.IsColumnDefaults = IsColumnDefaults;
-            iterator.IsNewLineBetweenMembers = IsNewLineBetweenMembers;
-            iterator.IsNavigationProperties = IsNavigationProperties;
-            iterator.IsNavigationPropertiesVirtual = IsNavigationPropertiesVirtual;
-            iterator.IsNavigationPropertiesOverride = IsNavigationPropertiesOverride;
-            iterator.IsNavigationPropertiesShowJoinTable = IsNavigationPropertiesShowJoinTable;
-            iterator.IsNavigationPropertiesComments = IsNavigationPropertiesComments;
-            iterator.IsNavigationPropertiesList = IsNavigationPropertiesList;
-            iterator.IsNavigationPropertiesICollection = IsNavigationPropertiesICollection;
-            iterator.IsNavigationPropertiesIEnumerable = IsNavigationPropertiesIEnumerable;
-            iterator.IsSingular = IsSingular;
-            iterator.IsIncludeDB = IsIncludeDB;
-            iterator.DBSeparator = DBSeparator;
-            iterator.IsIncludeSchema = IsIncludeSchema;
-            iterator.IsIgnoreDboSchema = IsIgnoreDboSchema;
-            iterator.SchemaSeparator = SchemaSeparator;
-            iterator.WordsSeparator = WordsSeparator;
-            iterator.IsCamelCase = IsCamelCase;
-            iterator.IsUpperCase = IsUpperCase;
-            iterator.IsLowerCase = IsLowerCase;
-            iterator.Search = Search;
-            iterator.Replace = Replace;
-            iterator.IsSearchIgnoreCase = IsSearchIgnoreCase;
-            iterator.FixedClassName = FixedClassName;
-            iterator.Prefix = Prefix;
-            iterator.Suffix = Suffix;
-
-            if (iterator is IEFIterator)
-            {
-                IEFIterator efIterator = iterator as IEFIterator;
-                efIterator.IsEF = IsEF;
-                efIterator.IsEFColumn = IsEFColumn;
-                efIterator.IsEFRequired = IsEFRequired;
-                efIterator.IsEFRequiredWithErrorMessage = IsEFRequiredWithErrorMessage;
-                efIterator.IsEFConcurrencyCheck = IsEFConcurrencyCheck;
-                efIterator.IsEFStringLength = IsEFStringLength;
-                efIterator.IsEFDisplay = IsEFDisplay;
-                efIterator.IsEFDescription = IsEFDescription;
-                efIterator.IsEFComplexType = IsEFComplexType;
-                efIterator.IsEFIndex = IsEFIndex;
-                efIterator.IsEFForeignKey = IsEFForeignKey;
-            }
-
+            DbIterator iterator = new DbIterator(dbObjects, pocoWriter);
             return iterator;
         }
 
@@ -1993,19 +1375,13 @@ namespace POCOGenerator
                 return new StringBuilderWriterFactory(sb).CreatePOCOWriter();
         }
 
-        private IPOCOIterator GetPOCOIterator(IEnumerable<IDbObjectTraverse> dbObjects, IPOCOWriter pocoWriter)
-        {
-            if (IsEF)
-                return new EFIteratorFactory().CreateIterator(dbObjects, pocoWriter);
-            else
-                return new DbIteratorFactory().CreateIterator(dbObjects, pocoWriter);
-        }
+
 
         #endregion
 
         #region POCO Editor
 
-        private List<IDbObjectTraverse> GetSelectedObjects()
+        internal List<IDbObjectTraverse> GetSelectedObjects()
         {
             List<IDbObjectTraverse> selectedObjects = new List<IDbObjectTraverse>();
             TreeNode serverNode = trvServer.Nodes[0];
@@ -2015,14 +1391,14 @@ namespace POCOGenerator
 
         private void GetSelectedObjects(TreeNode node, List<IDbObjectTraverse> selectedObjects)
         {
-            DbType nodeType = ((NodeTag)node.Tag).NodeType;
+            POCODbType nodeType = ((NodeTag)node.Tag).NodeType;
 
             bool isDbObjectTraverse =
-                nodeType == DbType.Table ||
-                nodeType == DbType.View ||
-                nodeType == DbType.Procedure ||
-                nodeType == DbType.Function ||
-                nodeType == DbType.TVP;
+                nodeType == POCODbType.Table ||
+                nodeType == POCODbType.View ||
+                nodeType == POCODbType.Procedure ||
+                nodeType == POCODbType.Function ||
+                nodeType == POCODbType.TVP;
 
             if (isDbObjectTraverse && node.Checked)
                 selectedObjects.Add(((NodeTag)node.Tag).DbObject as IDbObjectTraverse);
@@ -2052,39 +1428,39 @@ namespace POCOGenerator
             else if (selectedNode != null && (forceRefresh || selectedNode != selectedNodePrevious || selectedObjectsPrevious.Count > 0))
             {
                 IDbObjectTraverse dbObject = null;
-                DbType nodeType = ((NodeTag)selectedNode.Tag).NodeType;
-                if (nodeType == DbType.Table || nodeType == DbType.View || nodeType == DbType.Columns)
+                POCODbType nodeType = ((NodeTag)selectedNode.Tag).NodeType;
+                if (nodeType == POCODbType.Table || nodeType == POCODbType.View || nodeType == POCODbType.Columns)
                     dbObject = (Table)((NodeTag)selectedNode.Tag).DbObject;
-                else if (nodeType == DbType.Column)
+                else if (nodeType == POCODbType.Column)
                     dbObject = ((TableColumn)((NodeTag)selectedNode.Tag).DbObject).Table;
-                else if (nodeType == DbType.Procedure || nodeType == DbType.Function || nodeType == DbType.ProcedureParameters || nodeType == DbType.ProcedureColumns)
+                else if (nodeType == POCODbType.Procedure || nodeType == POCODbType.Function || nodeType == POCODbType.ProcedureParameters || nodeType == POCODbType.ProcedureColumns)
                     dbObject = (Procedure)((NodeTag)selectedNode.Tag).DbObject;
-                else if (nodeType == DbType.ProcedureParameter)
+                else if (nodeType == POCODbType.ProcedureParameter)
                     dbObject = ((ProcedureParameter)((NodeTag)selectedNode.Tag).DbObject).Procedure;
-                else if (nodeType == DbType.ProcedureColumn)
+                else if (nodeType == POCODbType.ProcedureColumn)
                     dbObject = ((ProcedureColumn)((NodeTag)selectedNode.Tag).DbObject).Procedure;
-                else if (nodeType == DbType.TVP || nodeType == DbType.TVPColumns)
+                else if (nodeType == POCODbType.TVP || nodeType == POCODbType.TVPColumns)
                     dbObject = (TVP)((NodeTag)selectedNode.Tag).DbObject;
-                else if (nodeType == DbType.TVPColumn)
+                else if (nodeType == POCODbType.TVPColumn)
                     dbObject = ((TVPColumn)((NodeTag)selectedNode.Tag).DbObject).TVP;
 
                 IDbObjectTraverse dbObjectPrevious = null;
                 if (selectedNodePrevious != null && forceRefresh == false && selectedObjectsPrevious.Count == 0)
                 {
-                    DbType nodeTypePrevious = ((NodeTag)selectedNodePrevious.Tag).NodeType;
-                    if (nodeTypePrevious == DbType.Table || nodeTypePrevious == DbType.View || nodeTypePrevious == DbType.Columns)
+                    POCODbType nodeTypePrevious = ((NodeTag)selectedNodePrevious.Tag).NodeType;
+                    if (nodeTypePrevious == POCODbType.Table || nodeTypePrevious == POCODbType.View || nodeTypePrevious == POCODbType.Columns)
                         dbObjectPrevious = (Table)((NodeTag)selectedNodePrevious.Tag).DbObject;
-                    else if (nodeTypePrevious == DbType.Column)
+                    else if (nodeTypePrevious == POCODbType.Column)
                         dbObjectPrevious = ((TableColumn)((NodeTag)selectedNodePrevious.Tag).DbObject).Table;
-                    else if (nodeTypePrevious == DbType.Procedure || nodeTypePrevious == DbType.Function || nodeTypePrevious == DbType.ProcedureParameters || nodeTypePrevious == DbType.ProcedureColumns)
+                    else if (nodeTypePrevious == POCODbType.Procedure || nodeTypePrevious == POCODbType.Function || nodeTypePrevious == POCODbType.ProcedureParameters || nodeTypePrevious == POCODbType.ProcedureColumns)
                         dbObjectPrevious = (Procedure)((NodeTag)selectedNodePrevious.Tag).DbObject;
-                    else if (nodeTypePrevious == DbType.ProcedureParameter)
+                    else if (nodeTypePrevious == POCODbType.ProcedureParameter)
                         dbObjectPrevious = ((ProcedureParameter)((NodeTag)selectedNodePrevious.Tag).DbObject).Procedure;
-                    else if (nodeTypePrevious == DbType.ProcedureColumn)
+                    else if (nodeTypePrevious == POCODbType.ProcedureColumn)
                         dbObjectPrevious = ((ProcedureColumn)((NodeTag)selectedNodePrevious.Tag).DbObject).Procedure;
-                    else if (nodeTypePrevious == DbType.TVP || nodeTypePrevious == DbType.TVPColumns)
+                    else if (nodeTypePrevious == POCODbType.TVP || nodeTypePrevious == POCODbType.TVPColumns)
                         dbObjectPrevious = (TVP)((NodeTag)selectedNodePrevious.Tag).DbObject;
-                    else if (nodeTypePrevious == DbType.TVPColumn)
+                    else if (nodeTypePrevious == POCODbType.TVPColumn)
                         dbObjectPrevious = ((TVPColumn)((NodeTag)selectedNodePrevious.Tag).DbObject).TVP;
                 }
 
@@ -2097,7 +1473,7 @@ namespace POCOGenerator
                 {
                     ClearDbObjects();
 
-                    if (nodeType == DbType.Database)
+                    if (nodeType == POCODbType.Database)
                     {
                         Database database = (Database)((NodeTag)selectedNode.Tag).DbObject;
                         WriteErrors(database.ToString(), database.Errors);
@@ -2144,212 +1520,7 @@ namespace POCOGenerator
 
         #endregion
 
-        #region Export
 
-        private void btnFolder_Click(object sender, EventArgs e)
-        {
-            folderBrowserDialogExport.SelectedPath = txtFolder.Text;
-            DialogResult dr = folderBrowserDialogExport.ShowDialog(this);
-            if (dr == System.Windows.Forms.DialogResult.OK)
-                txtFolder.Text = folderBrowserDialogExport.SelectedPath;
-        }
-
-        private void chkSingleFile_CheckedChanged(object sender, EventArgs e)
-        {
-            txtFileName.Enabled = chkSingleFile.Checked;
-        }
-
-        private void btnExport_Click(object sender, EventArgs e)
-        {
-            toolStripStatusLabel.Text = string.Empty;
-            Application.DoEvents();
-
-            if (string.IsNullOrWhiteSpace(txtFolder.Text))
-            {
-                txtFolder.Text = $"{Environment.CurrentDirectory}/Export";
-            }
-
-            if (Directory.Exists(txtFolder.Text) == false)
-            {
-                Directory.CreateDirectory(txtFolder.Text);
-            }
-
-            List<IDbObjectTraverse> exportObjects = GetExportObjects();
-            if (exportObjects.Count == 0)
-                return;
-
-            toolStripStatusLabel.Text = "Exporting...";
-            toolStripStatusLabel.ForeColor = Color.Black;
-            Application.DoEvents();
-
-            List<ExportResult> exportResults = WritePocoToFiles(exportObjects);
-
-            if (exportResults.Count > 0)
-            {
-                var failed = exportResults.Where(r => r.Succeeded == false).ToList();
-
-                if (failed.Count == 0)
-                {
-                    if (exportResults.Count > 1)
-                        toolStripStatusLabel.Text = "All POCOs were exported successfully";
-                    else
-                        toolStripStatusLabel.Text = string.Format("Exported {0} successfully", exportResults[0].ObjectName);
-                    toolStripStatusLabel.ForeColor = Color.Green;
-                }
-                else if (failed.Count == 1)
-                {
-                    var exportResult = failed[0];
-                    string fileName = exportResult.FileName;
-                    if (fileName == ".cs")
-                        fileName = string.Empty;
-                    if (string.IsNullOrEmpty(fileName))
-                        toolStripStatusLabel.Text = string.Format("Failed to export {0}", exportResult.ObjectName);
-                    else
-                        toolStripStatusLabel.Text = string.Format("Failed to export {0} to {1}", exportResult.ObjectName, fileName);
-                    toolStripStatusLabel.ForeColor = Color.Red;
-                }
-                else if (failed.Count < exportResults.Count)
-                {
-                    toolStripStatusLabel.Text = "Failed to export several POCOs";
-                    toolStripStatusLabel.ForeColor = Color.Red;
-                }
-                else if (failed.Count == exportResults.Count)
-                {
-                    toolStripStatusLabel.Text = "Failed to export all POCOs";
-                    toolStripStatusLabel.ForeColor = Color.Red;
-                }
-            }
-        }
-
-        private List<IDbObjectTraverse> GetExportObjects()
-        {
-            List<IDbObjectTraverse> exportResults = GetSelectedObjects();
-            TreeNode selectedNode = trvServer.SelectedNode;
-
-            if (exportResults.Count == 0 && selectedNode != null)
-            {
-                IDbObjectTraverse dbObject = null;
-                DbType nodeType = ((NodeTag)selectedNode.Tag).NodeType;
-                if (nodeType == DbType.Table || nodeType == DbType.View || nodeType == DbType.Columns)
-                    dbObject = (Table)((NodeTag)selectedNode.Tag).DbObject;
-                else if (nodeType == DbType.Column)
-                    dbObject = ((TableColumn)((NodeTag)selectedNode.Tag).DbObject).Table;
-                else if (nodeType == DbType.Procedure || nodeType == DbType.Function || nodeType == DbType.ProcedureParameters || nodeType == DbType.ProcedureColumns)
-                    dbObject = (Procedure)((NodeTag)selectedNode.Tag).DbObject;
-                else if (nodeType == DbType.ProcedureParameter)
-                    dbObject = ((ProcedureParameter)((NodeTag)selectedNode.Tag).DbObject).Procedure;
-                else if (nodeType == DbType.ProcedureColumn)
-                    dbObject = ((ProcedureColumn)((NodeTag)selectedNode.Tag).DbObject).Procedure;
-                else if (nodeType == DbType.TVP || nodeType == DbType.TVPColumns)
-                    dbObject = (TVP)((NodeTag)selectedNode.Tag).DbObject;
-                else if (nodeType == DbType.TVPColumn)
-                    dbObject = ((TVPColumn)((NodeTag)selectedNode.Tag).DbObject).TVP;
-
-                if (dbObject != null)
-                    exportResults.Add(dbObject);
-            }
-
-            return exportResults;
-        }
-
-        private List<ExportResult> WritePocoToFiles(List<IDbObjectTraverse> exportObjects)
-        {
-            List<ExportResult> exportResults = new List<ExportResult>();
-
-            if (exportObjects.Count > 0)
-            {
-                string folder = txtFolder.Text;
-                bool isSingleFile = chkSingleFile.Checked;
-                string fileName = txtFileName.Text;
-
-                if (isSingleFile && string.IsNullOrEmpty(fileName) == false)
-                {
-                    StringBuilder sb = new StringBuilder();
-                    IterateDbObjects(exportObjects, sb);
-
-                    if (fileName.EndsWith(".cs") == false)
-                        fileName += ".cs";
-                    foreach (char c in Path.GetInvalidFileNameChars())
-                        fileName = fileName.Replace(c.ToString(), string.Empty);
-
-                    Exception error = null;
-                    bool succeeded = WritePocoToFile(folder, fileName, sb.ToString(), true, ref error);
-
-
-
-                    foreach (var dbObject in exportObjects)
-                    {
-                        exportResults.Add(new ExportResult()
-                        {
-                            ObjectName = string.Format("{0}.{1}.{2}", dbObject.Database.ToString(), dbObject.Schema, dbObject.Name),
-                            ClassName = dbObject.ClassName,
-                            FileName = fileName,
-                            Succeeded = succeeded,
-                            Error = error
-                        });
-                    }
-                }
-                else
-                {
-                    foreach (var dbObject in exportObjects)
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        IterateDbObjects(dbObject, sb);
-
-                        fileName = dbObject.ClassName + ".cs";
-                        foreach (char c in Path.GetInvalidFileNameChars())
-                            fileName = fileName.Replace(c.ToString(), string.Empty);
-
-                        Exception error = null;
-                        bool succeeded = WritePocoToFile(folder, fileName, sb.ToString(), false, ref error);
-
-                        exportResults.Add(new ExportResult()
-                        {
-                            ObjectName = string.Format("{0}.{1}.{2}", dbObject.Database.ToString(), dbObject.Schema, dbObject.Name),
-                            ClassName = dbObject.ClassName,
-                            FileName = fileName,
-                            Succeeded = succeeded,
-                            Error = error
-                        });
-                    }
-                }
-            }
-
-            return exportResults;
-        }
-
-        private bool WritePocoToFile(string folder, string fileName, string content, bool isAppend, ref Exception error)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(fileName) || fileName == ".cs")
-                    throw new Exception("File name isn't set");
-
-                string path = folder.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar + fileName;
-                if (isAppend)
-                    File.AppendAllText(path, content);
-                else
-                    File.WriteAllText(path, content);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                error = ex;
-                return false;
-            }
-        }
-
-        private class ExportResult
-        {
-            public string ObjectName { get; set; }
-            public string ClassName { get; set; }
-            public string FileName { get; set; }
-            public bool Succeeded { get; set; }
-            public Exception Error { get; set; }
-        }
-
-        #endregion
 
         #region Type Mapping
 
@@ -2370,7 +1541,7 @@ namespace POCOGenerator
 
         private void btnCommandLine_Click(object sender, EventArgs e)
         {
-            Options options = GetOptions();
+            Options options = Program.PropertyForm.POCOConfig;
             List<string> shortCommandParts = CommandLineParser<Options>.GetCommandLineParts(options, true);
             List<string> longCommandParts = CommandLineParser<Options>.GetCommandLineParts(options, false);
             if (commandLineForm == null)
@@ -2379,541 +1550,11 @@ namespace POCOGenerator
             commandLineForm.ShowDialog(this);
         }
 
-        private Options GetOptions(bool isIncludeObjects = true)
-        {
-            Options options = new Options();
 
-            options.ConnectionString = DbHelper.ConnectionString;
-
-            options.IsProperties = IsProperties;
-            options.IsDataMembers = !IsProperties;
-            options.IsVirtualProperties = IsVirtualProperties;
-            options.IsOverrideProperties = IsOverrideProperties;
-            options.IsPartialClass = IsPartialClass;
-            options.IsAllStructNullable = IsAllStructNullable;
-            options.IsComments = IsComments;
-            options.IsCommentsWithoutNull = IsCommentsWithoutNull;
-            options.IsUsing = IsUsing;
-            options.Namespace = Namespace;
-            options.Inherit = Inherit;
-            options.IsColumnDefaults = IsColumnDefaults;
-            options.IsNewLineBetweenMembers = IsNewLineBetweenMembers;
-
-            if (options.IsComments == false)
-                options.IsCommentsWithoutNull = false;
-
-            options.IsNavigationProperties = IsNavigationProperties;
-            options.IsNavigationPropertiesVirtual = IsNavigationPropertiesVirtual;
-            options.IsNavigationPropertiesOverride = IsNavigationPropertiesOverride;
-            options.IsNavigationPropertiesShowJoinTable = IsNavigationPropertiesShowJoinTable;
-            options.IsNavigationPropertiesComments = IsNavigationPropertiesComments;
-            options.IsNavigationPropertiesList = IsNavigationPropertiesList;
-            options.IsNavigationPropertiesICollection = IsNavigationPropertiesICollection;
-            options.IsNavigationPropertiesIEnumerable = IsNavigationPropertiesIEnumerable;
-
-            if (options.IsNavigationProperties == false)
-            {
-                options.IsNavigationPropertiesVirtual = false;
-                options.IsNavigationPropertiesOverride = false;
-                options.IsNavigationPropertiesShowJoinTable = false;
-                options.IsNavigationPropertiesComments = false;
-                options.IsNavigationPropertiesList = false;
-                options.IsNavigationPropertiesICollection = false;
-                options.IsNavigationPropertiesIEnumerable = false;
-                options.IsEFForeignKey = false;
-            }
-
-            options.IsSingular = IsSingular;
-            options.IsIncludeDB = IsIncludeDB;
-            options.DBSeparator = DBSeparator;
-            options.IsIncludeSchema = IsIncludeSchema;
-            options.IsIgnoreDboSchema = IsIgnoreDboSchema;
-            options.SchemaSeparator = SchemaSeparator;
-            options.WordsSeparator = WordsSeparator;
-            options.IsCamelCase = IsCamelCase;
-            options.IsUpperCase = IsUpperCase;
-            options.IsLowerCase = IsLowerCase;
-            options.Search = Search;
-            options.Replace = Replace;
-            options.IsSearchIgnoreCase = IsSearchIgnoreCase;
-            options.FixedClassName = FixedClassName;
-            options.Prefix = Prefix;
-            options.Suffix = Suffix;
-
-            options.IsEF = IsEF;
-            options.IsEFColumn = IsEFColumn;
-            options.IsEFRequired = IsEFRequired;
-            options.IsEFRequiredWithErrorMessage = IsEFRequiredWithErrorMessage;
-            options.IsEFConcurrencyCheck = IsEFConcurrencyCheck;
-            options.IsEFStringLength = IsEFStringLength;
-            options.IsEFDisplay = IsEFDisplay;
-            options.IsEFDescription = IsEFDescription;
-            options.IsEFComplexType = IsEFComplexType;
-            options.IsEFIndex = IsEFIndex;
-            options.IsEFForeignKey = IsEFForeignKey;
-
-            if (options.IsEF == false)
-            {
-                options.IsEFColumn = false;
-                options.IsEFRequired = false;
-                options.IsEFRequiredWithErrorMessage = false;
-                options.IsEFConcurrencyCheck = false;
-                options.IsEFStringLength = false;
-                options.IsEFDisplay = false;
-                options.IsEFDescription = false;
-                options.IsEFComplexType = false;
-                options.IsEFIndex = false;
-                options.IsEFForeignKey = false;
-            }
-
-            options.Folder = txtFolder.Text;
-            options.IsSingleFile = chkSingleFile.Checked;
-            options.FileName = txtFileName.Text;
-
-            options.IsIncludeAll = false;
-
-            options.IsIncludeAllTables = false;
-            options.IsExcludeAllTables = false;
-            options.IncludeTables = new List<string>();
-            options.ExcludeTables = new List<string>();
-
-            options.IsIncludeAllViews = false;
-            options.IsExcludeAllViews = false;
-            options.IncludeViews = new List<string>();
-            options.ExcludeViews = new List<string>();
-
-            options.IsIncludeAllStoredProcedures = false;
-            options.IsExcludeAllStoredProcedures = false;
-            options.IncludeStoredProcedures = new List<string>();
-            options.ExcludeStoredProcedures = new List<string>();
-
-            options.IsIncludeAllFunctions = false;
-            options.IsExcludeAllFunctions = false;
-            options.IncludeFunctions = new List<string>();
-            options.ExcludeFunctions = new List<string>();
-
-            options.IsIncludeAllTVPs = false;
-            options.IsExcludeAllTVPs = false;
-            options.IncludeTVPs = new List<string>();
-            options.ExcludeTVPs = new List<string>();
-
-            if (isIncludeObjects)
-                SetIncludeObjects(options);
-
-            return options;
-        }
-
-        private void SetIncludeObjects(Options options)
-        {
-            TreeNode serverNode = trvServer.Nodes[0];
-            SetIncludeObjects(options, serverNode);
-
-            options.IsIncludeAllTables = (options.IncludeTables.Count > 0 && options.ExcludeTables.Count == 0);
-            options.IsExcludeAllTables = (options.IncludeTables.Count == 0 && options.ExcludeTables.Count > 0);
-
-            options.IsIncludeAllViews = (options.IncludeViews.Count > 0 && options.ExcludeViews.Count == 0);
-            options.IsExcludeAllViews = (options.IncludeViews.Count == 0 && options.ExcludeViews.Count > 0);
-
-            options.IsIncludeAllStoredProcedures = (options.IncludeStoredProcedures.Count > 0 && options.ExcludeStoredProcedures.Count == 0);
-            options.IsExcludeAllStoredProcedures = (options.IncludeStoredProcedures.Count == 0 && options.ExcludeStoredProcedures.Count > 0);
-
-            options.IsIncludeAllFunctions = (options.IncludeFunctions.Count > 0 && options.ExcludeFunctions.Count == 0);
-            options.IsExcludeAllFunctions = (options.IncludeFunctions.Count == 0 && options.ExcludeFunctions.Count > 0);
-
-            options.IsIncludeAllTVPs = (options.IncludeTVPs.Count > 0 && options.ExcludeTVPs.Count == 0);
-            options.IsExcludeAllTVPs = (options.IncludeTVPs.Count == 0 && options.ExcludeTVPs.Count > 0);
-
-            options.IsIncludeAll =
-                options.ExcludeTables.Count == 0 &&
-                options.ExcludeViews.Count == 0 &&
-                options.ExcludeStoredProcedures.Count == 0 &&
-                options.ExcludeFunctions.Count == 0 &&
-                options.ExcludeTVPs.Count == 0;
-
-            bool isExcludeAll =
-                options.IncludeTables.Count == 0 &&
-                options.IncludeViews.Count == 0 &&
-                options.IncludeStoredProcedures.Count == 0 &&
-                options.IncludeFunctions.Count == 0 &&
-                options.IncludeTVPs.Count == 0;
-
-            if (options.IsIncludeAllTables)
-                options.IncludeTables.Clear();
-            if (options.IsExcludeAllTables)
-                options.ExcludeTables.Clear();
-
-            if (options.IsIncludeAllViews)
-                options.IncludeViews.Clear();
-            if (options.IsExcludeAllViews)
-                options.ExcludeViews.Clear();
-
-            if (options.IsIncludeAllStoredProcedures)
-                options.IncludeStoredProcedures.Clear();
-            if (options.IsExcludeAllStoredProcedures)
-                options.ExcludeStoredProcedures.Clear();
-
-            if (options.IsIncludeAllFunctions)
-                options.IncludeFunctions.Clear();
-            if (options.IsExcludeAllFunctions)
-                options.ExcludeFunctions.Clear();
-
-            if (options.IsIncludeAllTVPs)
-                options.IncludeTVPs.Clear();
-            if (options.IsExcludeAllTVPs)
-                options.ExcludeTVPs.Clear();
-
-            if (options.IsIncludeAll)
-            {
-                options.IsIncludeAllTables = false;
-                options.IsIncludeAllViews = false;
-                options.IsIncludeAllStoredProcedures = false;
-                options.IsIncludeAllFunctions = false;
-                options.IsIncludeAllTVPs = false;
-            }
-            else if (options.IsIncludeAll == false && isExcludeAll == false)
-            {
-                if (options.IsIncludeAllTables == false && options.IsExcludeAllTables == false && (options.IncludeTables.Count > 0 && options.ExcludeTables.Count > 0))
-                {
-                    if (1.0 * options.ExcludeTables.Count / (options.IncludeTables.Count + options.ExcludeTables.Count) < 0.5)
-                    {
-                        options.IsIncludeAllTables = true;
-                        options.IncludeTables.Clear();
-                    }
-                    else
-                    {
-                        options.ExcludeTables.Clear();
-                    }
-                }
-
-                if (options.IsIncludeAllViews == false && options.IsExcludeAllViews == false && (options.IncludeViews.Count > 0 && options.ExcludeViews.Count > 0))
-                {
-                    if (1.0 * options.ExcludeViews.Count / (options.IncludeViews.Count + options.ExcludeViews.Count) < 0.5)
-                    {
-                        options.IsIncludeAllViews = true;
-                        options.IncludeViews.Clear();
-                    }
-                    else
-                    {
-                        options.ExcludeViews.Clear();
-                    }
-                }
-
-                if (options.IsIncludeAllStoredProcedures == false && options.IsExcludeAllStoredProcedures == false && (options.IncludeStoredProcedures.Count > 0 && options.ExcludeStoredProcedures.Count > 0))
-                {
-                    if (1.0 * options.ExcludeStoredProcedures.Count / (options.IncludeStoredProcedures.Count + options.ExcludeStoredProcedures.Count) < 0.5)
-                    {
-                        options.IsIncludeAllStoredProcedures = true;
-                        options.IncludeStoredProcedures.Clear();
-                    }
-                    else
-                    {
-                        options.ExcludeStoredProcedures.Clear();
-                    }
-                }
-
-                if (options.IsIncludeAllFunctions == false && options.IsExcludeAllFunctions == false && (options.IncludeFunctions.Count > 0 && options.ExcludeFunctions.Count > 0))
-                {
-                    if (1.0 * options.ExcludeFunctions.Count / (options.IncludeFunctions.Count + options.ExcludeFunctions.Count) < 0.5)
-                    {
-                        options.IsIncludeAllFunctions = true;
-                        options.IncludeFunctions.Clear();
-                    }
-                    else
-                    {
-                        options.ExcludeFunctions.Clear();
-                    }
-                }
-
-                if (options.IsIncludeAllTVPs == false && options.IsExcludeAllTVPs == false && (options.IncludeTVPs.Count > 0 && options.ExcludeTVPs.Count > 0))
-                {
-                    if (1.0 * options.ExcludeTVPs.Count / (options.IncludeTVPs.Count + options.ExcludeTVPs.Count) < 0.5)
-                    {
-                        options.IsIncludeAllTVPs = true;
-                        options.IncludeTVPs.Clear();
-                    }
-                    else
-                    {
-                        options.ExcludeTVPs.Clear();
-                    }
-                }
-            }
-
-            options.IsExcludeAllTables = false;
-            options.IsExcludeAllViews = false;
-            options.IsExcludeAllStoredProcedures = false;
-            options.IsExcludeAllFunctions = false;
-            options.IsExcludeAllTVPs = false;
-        }
-
-        private void SetIncludeObjects(Options options, TreeNode node)
-        {
-            DbType nodeType = ((NodeTag)node.Tag).NodeType;
-
-            if (nodeType == DbType.Table || nodeType == DbType.View || nodeType == DbType.Procedure || nodeType == DbType.Function || nodeType == DbType.TVP)
-            {
-                IDbObjectTraverse dbObject = ((NodeTag)node.Tag).DbObject as IDbObjectTraverse;
-                if (nodeType == DbType.Table)
-                    (node.Checked ? options.IncludeTables : options.ExcludeTables).Add(dbObject.Schema == "dbo" ? dbObject.Name : dbObject.ToString());
-                else if (nodeType == DbType.View)
-                    (node.Checked ? options.IncludeViews : options.ExcludeViews).Add(dbObject.Schema == "dbo" ? dbObject.Name : dbObject.ToString());
-                else if (nodeType == DbType.Procedure)
-                    (node.Checked ? options.IncludeStoredProcedures : options.ExcludeStoredProcedures).Add(dbObject.Schema == "dbo" ? dbObject.Name : dbObject.ToString());
-                else if (nodeType == DbType.Function)
-                    (node.Checked ? options.IncludeFunctions : options.ExcludeFunctions).Add(dbObject.Schema == "dbo" ? dbObject.Name : dbObject.ToString());
-                else if (nodeType == DbType.TVP)
-                    (node.Checked ? options.IncludeTVPs : options.ExcludeTVPs).Add(dbObject.Schema == "dbo" ? dbObject.Name : dbObject.ToString());
-            }
-
-            bool isRecursion =
-                nodeType == DbType.Server ||
-                nodeType == DbType.Database ||
-                nodeType == DbType.Tables ||
-                nodeType == DbType.Views ||
-                nodeType == DbType.Procedures ||
-                nodeType == DbType.Functions ||
-                nodeType == DbType.TVPs;
-
-            if (isRecursion)
-            {
-                foreach (TreeNode child in node.Nodes)
-                    SetIncludeObjects(options, child);
-            }
-        }
 
         #endregion
 
-        #region Load & Save Options
 
-        private readonly string settingsFileName = "POCOGenerator.settings";
-
-        private void LoadOptions()
-        {
-            try
-            {
-                if (File.Exists(settingsFileName) == false)
-                    return;
-
-                Options options = SerializationHelper.BinaryDeserializeFromFile<Options>(settingsFileName);
-
-                if (string.IsNullOrEmpty(options.ConnectionString) == false)
-                    DbHelper.ConnectionString = options.ConnectionString;
-
-                IsProperties = true;
-                if (options.IsProperties == false && options.IsDataMembers)
-                    IsProperties = false;
-
-                SetRadioButton(rdbProperties, rdbProperties_CheckedChanged, IsProperties);
-
-                SetRadioButton(rdbDataMembers, rdbDataMembers_CheckedChanged, !IsProperties);
-
-                IsVirtualProperties = options.IsVirtualProperties;
-                SetCheckBox(chkVirtualProperties, chkVirtualProperties_CheckedChanged, IsVirtualProperties);
-
-                IsOverrideProperties = options.IsOverrideProperties;
-                SetCheckBox(chkOverrideProperties, chkOverrideProperties_CheckedChanged, IsOverrideProperties);
-
-                IsPartialClass = options.IsPartialClass;
-                SetCheckBox(chkPartialClass, chkPartialClass_CheckedChanged, IsPartialClass);
-
-                IsAllStructNullable = options.IsAllStructNullable;
-                SetCheckBox(chkAllStructNullable, chkAllStructNullable_CheckedChanged, IsAllStructNullable);
-
-                if (options.IsComments == false)
-                    options.IsCommentsWithoutNull = false;
-
-                IsComments = options.IsComments;
-                SetCheckBox(chkComments, chkComments_CheckedChanged, IsComments);
-
-                IsCommentsWithoutNull = options.IsCommentsWithoutNull;
-                SetCheckBox(chkCommentsWithoutNull, chkCommentsWithoutNull_CheckedChanged, IsCommentsWithoutNull);
-
-                IsUsing = options.IsUsing;
-                SetCheckBox(chkUsing, chkUsing_CheckedChanged, IsUsing);
-
-                Namespace = options.Namespace;
-                SetTextBox(txtNamespace, txtNamespace_TextChanged, Namespace);
-
-                Inherit = options.Inherit;
-                SetTextBox(txtInherit, txtInherit_TextChanged, Inherit);
-
-                IsColumnDefaults = options.IsColumnDefaults;
-                SetCheckBox(chkColumnDefaults, chkColumnDefaults_CheckedChanged, IsColumnDefaults);
-
-                IsNewLineBetweenMembers = options.IsNewLineBetweenMembers;
-                SetCheckBox(chkNewLineBetweenMembers, chkNewLineBetweenMembers_CheckedChanged, IsNewLineBetweenMembers);
-
-                if (options.IsNavigationProperties == false)
-                {
-                    options.IsNavigationPropertiesVirtual = false;
-                    options.IsNavigationPropertiesOverride = false;
-                    options.IsNavigationPropertiesShowJoinTable = false;
-                    options.IsNavigationPropertiesComments = false;
-                    options.IsEFForeignKey = false;
-                }
-
-                if (options.IsNavigationPropertiesList == false && options.IsNavigationPropertiesICollection == false && options.IsNavigationPropertiesIEnumerable == false)
-                    options.IsNavigationPropertiesList = true;
-
-                if (options.IsNavigationPropertiesList)
-                {
-                    options.IsNavigationPropertiesICollection = false;
-                    options.IsNavigationPropertiesIEnumerable = false;
-                }
-                else if (options.IsNavigationPropertiesICollection)
-                {
-                    options.IsNavigationPropertiesList = false;
-                    options.IsNavigationPropertiesIEnumerable = false;
-                }
-                else if (options.IsNavigationPropertiesIEnumerable)
-                {
-                    options.IsNavigationPropertiesList = false;
-                    options.IsNavigationPropertiesICollection = false;
-                }
-
-                IsNavigationProperties = options.IsNavigationProperties;
-                SetCheckBox(chkNavigationProperties, chkNavigationProperties_CheckedChanged, IsNavigationProperties);
-
-                IsNavigationPropertiesVirtual = options.IsNavigationPropertiesVirtual;
-                SetCheckBox(chkNavigationPropertiesVirtual, chkNavigationPropertiesVirtual_CheckedChanged, IsNavigationPropertiesVirtual);
-
-                IsNavigationPropertiesOverride = options.IsNavigationPropertiesOverride;
-                SetCheckBox(chkNavigationPropertiesOverride, chkNavigationPropertiesOverride_CheckedChanged, IsNavigationPropertiesOverride);
-
-                IsNavigationPropertiesShowJoinTable = options.IsNavigationPropertiesShowJoinTable;
-                SetCheckBox(chkNavigationPropertiesShowJoinTable, chkNavigationPropertiesShowJoinTable_CheckedChanged, IsNavigationPropertiesShowJoinTable);
-
-                IsNavigationPropertiesComments = options.IsNavigationPropertiesComments;
-                SetCheckBox(chkNavigationPropertiesComments, chkNavigationPropertiesComments_CheckedChanged, IsNavigationPropertiesComments);
-
-                IsNavigationPropertiesList = options.IsNavigationPropertiesList;
-                SetRadioButton(rdbNavigationPropertiesList, rdbNavigationPropertiesList_CheckedChanged, IsNavigationPropertiesList);
-
-                IsNavigationPropertiesICollection = options.IsNavigationPropertiesICollection;
-                SetRadioButton(rdbNavigationPropertiesICollection, rdbNavigationPropertiesICollection_CheckedChanged, IsNavigationPropertiesICollection);
-
-                IsNavigationPropertiesIEnumerable = options.IsNavigationPropertiesIEnumerable;
-                SetRadioButton(rdbNavigationPropertiesIEnumerable, rdbNavigationPropertiesIEnumerable_CheckedChanged, IsNavigationPropertiesIEnumerable);
-
-                IsSingular = options.IsSingular;
-                SetCheckBox(chkSingular, chkSingular_CheckedChanged, IsSingular);
-
-                IsIncludeDB = options.IsIncludeDB;
-                SetCheckBox(chkIncludeDB, chkIncludeDB_CheckedChanged, IsIncludeDB);
-
-                DBSeparator = options.DBSeparator;
-                SetTextBox(txtDBSeparator, txtDBSeparator_TextChanged, DBSeparator);
-
-                IsIncludeSchema = options.IsIncludeSchema;
-                SetCheckBox(chkIncludeSchema, chkIncludeSchema_CheckedChanged, IsIncludeSchema);
-
-                IsIgnoreDboSchema = options.IsIgnoreDboSchema;
-                SetCheckBox(chkIgnoreDboSchema, chkIgnoreDboSchema_CheckedChanged, IsIgnoreDboSchema);
-
-                SchemaSeparator = options.SchemaSeparator;
-                SetTextBox(txtSchemaSeparator, txtSchemaSeparator_TextChanged, SchemaSeparator);
-
-                WordsSeparator = options.WordsSeparator;
-                SetTextBox(txtWordsSeparator, txtWordsSeparator_TextChanged, WordsSeparator);
-
-                IsCamelCase = options.IsCamelCase;
-                SetCheckBox(chkCamelCase, chkCamelCase_CheckedChanged, IsCamelCase);
-
-                IsUpperCase = options.IsUpperCase;
-                SetCheckBox(chkUpperCase, chkUpperCase_CheckedChanged, IsUpperCase);
-
-                IsLowerCase = options.IsLowerCase;
-                SetCheckBox(chkLowerCase, chkLowerCase_CheckedChanged, IsLowerCase);
-
-                Search = options.Search;
-                SetTextBox(txtSearch, txtSearch_TextChanged, Search);
-
-                Replace = options.Replace;
-                SetTextBox(txtReplace, txtReplace_TextChanged, Replace);
-
-                IsSearchIgnoreCase = options.IsSearchIgnoreCase;
-                SetCheckBox(chkSearchIgnoreCase, chkSearchIgnoreCase_CheckedChanged, IsSearchIgnoreCase);
-
-                FixedClassName = options.FixedClassName;
-                SetTextBox(txtFixedClassName, txtFixedClassName_TextChanged, FixedClassName);
-
-                Prefix = options.Prefix;
-                SetTextBox(txtPrefix, txtPrefix_TextChanged, Prefix);
-
-                Suffix = options.Suffix;
-                SetTextBox(txtSuffix, txtSuffix_TextChanged, Suffix);
-
-                if (options.IsEF == false)
-                {
-                    options.IsEFColumn = false;
-                    options.IsEFRequired = false;
-                    options.IsEFRequiredWithErrorMessage = false;
-                    options.IsEFConcurrencyCheck = false;
-                    options.IsEFStringLength = false;
-                    options.IsEFDisplay = false;
-                    options.IsEFDescription = false;
-                    options.IsEFComplexType = false;
-                    options.IsEFIndex = false;
-                    options.IsEFForeignKey = false;
-                }
-
-                IsEF = options.IsEF;
-                SetCheckBox(chkEF, chkEF_CheckedChanged, IsEF);
-
-                IsEFColumn = options.IsEFColumn;
-                SetCheckBox(chkEFColumn, chkEFColumn_CheckedChanged, IsEFColumn);
-
-                IsEFRequired = options.IsEFRequired;
-                SetCheckBox(chkEFRequired, chkEFRequired_CheckedChanged, IsEFRequired);
-
-                IsEFRequiredWithErrorMessage = options.IsEFRequiredWithErrorMessage;
-                SetCheckBox(chkEFRequiredWithErrorMessage, chkEFRequiredWithErrorMessage_CheckedChanged, IsEFRequiredWithErrorMessage);
-
-                IsEFConcurrencyCheck = options.IsEFConcurrencyCheck;
-                SetCheckBox(chkEFConcurrencyCheck, chkEFConcurrencyCheck_CheckedChanged, IsEFConcurrencyCheck);
-
-                IsEFStringLength = options.IsEFStringLength;
-                SetCheckBox(chkEFStringLength, chkEFStringLength_CheckedChanged, IsEFStringLength);
-
-                IsEFDisplay = options.IsEFDisplay;
-                SetCheckBox(chkEFDisplay, chkEFDisplay_CheckedChanged, IsEFDisplay);
-
-                IsEFDescription = options.IsEFDescription;
-                SetCheckBox(chkEFDescription, chkEFDescription_CheckedChanged, IsEFDescription);
-
-                IsEFComplexType = options.IsEFComplexType;
-                SetCheckBox(chkEFComplexType, chkEFComplexType_CheckedChanged, IsEFComplexType);
-
-                IsEFIndex = options.IsEFIndex;
-                SetCheckBox(chkEFIndex, chkEFIndex_CheckedChanged, IsEFIndex);
-
-                IsEFForeignKey = options.IsEFForeignKey;
-                SetCheckBox(chkEFForeignKey, chkEFForeignKey_CheckedChanged, IsEFForeignKey);
-
-                txtFolder.Text = options.Folder;
-                chkSingleFile.Checked = options.IsSingleFile;
-                txtFileName.Text = options.FileName;
-            }
-            catch
-            {
-            }
-        }
-
-        private void SaveOptions()
-        {
-            try
-            {
-                Options options = GetOptions(false);
-                options.IsNavigationPropertiesList = IsNavigationPropertiesList;
-                options.IsNavigationPropertiesICollection = IsNavigationPropertiesICollection;
-                options.IsNavigationPropertiesIEnumerable = IsNavigationPropertiesIEnumerable;
-                SerializationHelper.BinarySerializeToFile(options, settingsFileName);
-            }
-            catch
-            {
-            }
-        }
-
-        #endregion
 
 
 
