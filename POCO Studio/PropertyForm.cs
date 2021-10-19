@@ -6,11 +6,7 @@ using POCOGenerator.CommandLine;
 using POCOGenerator.Helpers;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Text;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 
@@ -18,10 +14,8 @@ namespace POCO_Studio
 {
     public partial class PropertyForm : DockContent
     {
-
-
-
         public Options POCOConfig { get => Iterator.POCOConfiguration; set => Iterator.POCOConfiguration = value; }
+
         public DbIterator Iterator { get; set; }
 
         public PropertyForm()
@@ -37,21 +31,18 @@ namespace POCO_Studio
 
         private void toolStripMenuItem2_Click(object sender, EventArgs e)
         {
-
         }
 
         private void PropertyForm_Load(object sender, EventArgs e)
         {
-
         }
 
         public void LoadConfig(DbIterator dbIterator)
         {
             this.Iterator = dbIterator ?? this.Iterator;
+            LoadOptions();
             this.GRID.SelectedObject = this.POCOConfig;
-
         }
-
 
         private string settingsFileName => $"configuration.settings";
 
@@ -59,19 +50,13 @@ namespace POCO_Studio
         {
             try
             {
-                if (File.Exists(settingsFileName) == false)
-                    return;
-
-                POCOConfig = SerializationHelper.BinaryDeserializeFromFile<Options>(settingsFileName);
-
-
+                if (File.Exists(settingsFileName))
+                    POCOConfig = SerializationHelper.BinaryDeserializeFromFile<Options>(settingsFileName);
             }
             catch
             {
             }
         }
-
-
 
         private void SetIncludeObjects(Options options, TreeView trvServer)
         {
@@ -217,81 +202,66 @@ namespace POCO_Studio
 
         public Options GetOptions(bool isIncludeObjects = true, TreeView view = null)
         {
-            Options options = new Options();
+            this.POCOConfig ??= new Options();
 
-            options.ConnectionString = DbHelper.ConnectionString;
+            this.POCOConfig.ConnectionString = DbHelper.ConnectionString;
 
+            if (this.POCOConfig.IsComments == false)
+                this.POCOConfig.IsCommentsWithoutNull = false;
 
-
-            if (options.IsComments == false)
-                options.IsCommentsWithoutNull = false;
-
-
-
-            if (options.IsNavigationProperties == false)
+            if (this.POCOConfig.IsNavigationProperties == false)
             {
-                options.IsNavigationPropertiesVirtual = false;
-                options.IsNavigationPropertiesOverride = false;
-                options.IsNavigationPropertiesShowJoinTable = false;
-                options.IsNavigationPropertiesComments = false;
-                options.IsNavigationPropertiesList = false;
-                options.IsNavigationPropertiesICollection = false;
-                options.IsNavigationPropertiesIEnumerable = false;
-                options.IsEFForeignKey = false;
+                this.POCOConfig.IsNavigationPropertiesVirtual = false;
+                this.POCOConfig.IsNavigationPropertiesOverride = false;
+                this.POCOConfig.IsNavigationPropertiesShowJoinTable = false;
+                this.POCOConfig.IsNavigationPropertiesComments = false;
+                this.POCOConfig.IsNavigationPropertiesList = false;
+                this.POCOConfig.IsNavigationPropertiesICollection = false;
+                this.POCOConfig.IsNavigationPropertiesIEnumerable = false;
+                this.POCOConfig.IsEFForeignKey = false;
             }
 
-
-
-
-
-            if (options.IsEF == false)
+            if (this.POCOConfig.IsEF == false)
             {
-                options.IsEFCore = false;
-                options.IsEFColumn = false;
-                options.IsEFRequired = false;
-                options.IsEFRequiredWithErrorMessage = false;
-                options.IsEFConcurrencyCheck = false;
-                options.IsEFStringLength = false;
-                options.IsEFDisplay = false;
-                options.IsEFDescription = false;
-                options.IsEFComplexType = false;
-                options.IsEFIndex = false;
-                options.IsEFForeignKey = false;
+                this.POCOConfig.IsEFCore = false;
+                this.POCOConfig.IsEFColumn = false;
+                this.POCOConfig.IsEFRequired = false;
+                this.POCOConfig.IsEFRequiredWithErrorMessage = false;
+                this.POCOConfig.IsEFConcurrencyCheck = false;
+                this.POCOConfig.IsEFStringLength = false;
+                this.POCOConfig.IsEFDisplay = false;
+                this.POCOConfig.IsEFDescription = false;
+                this.POCOConfig.IsEFComplexType = false;
+                this.POCOConfig.IsEFIndex = false;
+                this.POCOConfig.IsEFForeignKey = false;
             }
 
             //options.Folder = txtFolder.Text;
             //options.IsSingleFile = chkSingleFile.Checked;
             //options.FileName = txtFileName.Text;
 
-            options.IsIncludeAll = false;
+            this.POCOConfig.IsIncludeAll = false;
+            this.POCOConfig.IncludeTables = new List<string>();
+            this.POCOConfig.ExcludeTables = new List<string>();
 
+            this.POCOConfig.IncludeViews = new List<string>();
+            this.POCOConfig.ExcludeViews = new List<string>();
 
-            options.IncludeTables = new List<string>();
-            options.ExcludeTables = new List<string>();
+            this.POCOConfig.IncludeStoredProcedures = new List<string>();
+            this.POCOConfig.ExcludeStoredProcedures = new List<string>();
 
+            this.POCOConfig.IncludeFunctions = new List<string>();
+            this.POCOConfig.ExcludeFunctions = new List<string>();
 
-            options.IncludeViews = new List<string>();
-            options.ExcludeViews = new List<string>();
-
-
-            options.IncludeStoredProcedures = new List<string>();
-            options.ExcludeStoredProcedures = new List<string>();
-
-
-            options.IncludeFunctions = new List<string>();
-            options.ExcludeFunctions = new List<string>();
-
-
-            options.IncludeTVPs = new List<string>();
-            options.ExcludeTVPs = new List<string>();
+            this.POCOConfig.IncludeTVPs = new List<string>();
+            this.POCOConfig.ExcludeTVPs = new List<string>();
 
             if (isIncludeObjects)
-                SetIncludeObjects(options,view);
+                SetIncludeObjects(this.POCOConfig, view);
 
-            return options;
+            this.GRID.SelectedObject = this.POCOConfig;
+            return this.POCOConfig;
         }
-
-
 
         private void SetIncludeObjects(Options options, TreeNode node)
         {
@@ -327,6 +297,7 @@ namespace POCO_Studio
                     SetIncludeObjects(options, child);
             }
         }
+
         public void SaveOptions()
         {
             try
@@ -337,11 +308,5 @@ namespace POCO_Studio
             {
             }
         }
-
-
     }
-
-
 }
-
-

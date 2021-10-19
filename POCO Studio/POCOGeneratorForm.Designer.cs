@@ -38,9 +38,12 @@
             this.clearCheckBoxesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListDbObjects = new System.Windows.Forms.ImageList(this.components);
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.txtPocoEditor = new System.Windows.Forms.RichTextBox();
             this.contextMenuPocoEditor = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.panelMain = new System.Windows.Forms.Panel();
             this.folderBrowserDialogExport = new System.Windows.Forms.FolderBrowserDialog();
             this.contextMenuTable = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.checkTablesConnectedFromToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -50,23 +53,17 @@
             this.checkRecursivelyTablesConnectedToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkRecursivelyTablesConnectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panelMain = new System.Windows.Forms.Panel();
-            this.txtPocoEditor = new System.Windows.Forms.RichTextBox();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.contextMenu.SuspendLayout();
-            this.contextMenuPocoEditor.SuspendLayout();
-            this.contextMenuTable.SuspendLayout();
-            this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
+            this.contextMenuPocoEditor.SuspendLayout();
+            this.contextMenuTable.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -165,6 +162,45 @@
             this.imageListDbObjects.Images.SetKeyName(10, "UK.gif");
             this.imageListDbObjects.Images.SetKeyName(11, "Index.gif");
             // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.HSplit;
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitContainer2.IsSplitterFixed = true;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.splitContainer2.Name = "splitContainer2";
+            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.txtPocoEditor);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.panelMain);
+            this.splitContainer2.Size = new System.Drawing.Size(814, 994);
+            this.splitContainer2.SplitterDistance = 626;
+            this.splitContainer2.SplitterWidth = 5;
+            this.splitContainer2.TabIndex = 0;
+            // 
+            // txtPocoEditor
+            // 
+            this.txtPocoEditor.BackColor = System.Drawing.Color.White;
+            this.txtPocoEditor.ContextMenuStrip = this.contextMenuPocoEditor;
+            this.txtPocoEditor.DetectUrls = false;
+            this.txtPocoEditor.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtPocoEditor.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.txtPocoEditor.Location = new System.Drawing.Point(0, 0);
+            this.txtPocoEditor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.txtPocoEditor.Name = "txtPocoEditor";
+            this.txtPocoEditor.ReadOnly = true;
+            this.txtPocoEditor.Size = new System.Drawing.Size(814, 626);
+            this.txtPocoEditor.TabIndex = 0;
+            this.txtPocoEditor.Text = "";
+            this.txtPocoEditor.WordWrap = false;
+            // 
             // contextMenuPocoEditor
             // 
             this.contextMenuPocoEditor.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -187,6 +223,15 @@
             this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
             this.selectAllToolStripMenuItem.Text = "Select All";
             this.selectAllToolStripMenuItem.Click += new System.EventHandler(this.selectAllToolStripMenuItem_Click);
+            // 
+            // panelMain
+            // 
+            this.panelMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelMain.Location = new System.Drawing.Point(0, 0);
+            this.panelMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.panelMain.Name = "panelMain";
+            this.panelMain.Size = new System.Drawing.Size(814, 363);
+            this.panelMain.TabIndex = 0;
             // 
             // contextMenuTable
             // 
@@ -250,74 +295,6 @@
             this.refreshTableToolStripMenuItem.Text = "Refresh";
             this.refreshTableToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
-            // panelMain
-            // 
-            this.panelMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelMain.Location = new System.Drawing.Point(0, 0);
-            this.panelMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.panelMain.Name = "panelMain";
-            this.panelMain.Size = new System.Drawing.Size(814, 362);
-            this.panelMain.TabIndex = 0;
-            // 
-            // txtPocoEditor
-            // 
-            this.txtPocoEditor.BackColor = System.Drawing.Color.White;
-            this.txtPocoEditor.ContextMenuStrip = this.contextMenuPocoEditor;
-            this.txtPocoEditor.DetectUrls = false;
-            this.txtPocoEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtPocoEditor.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.txtPocoEditor.Location = new System.Drawing.Point(0, 0);
-            this.txtPocoEditor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.txtPocoEditor.Name = "txtPocoEditor";
-            this.txtPocoEditor.ReadOnly = true;
-            this.txtPocoEditor.Size = new System.Drawing.Size(814, 627);
-            this.txtPocoEditor.TabIndex = 0;
-            this.txtPocoEditor.Text = "";
-            this.txtPocoEditor.WordWrap = false;
-            // 
-            // menuStrip1
-            // 
-            this.menuStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem1});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 603);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Padding = new System.Windows.Forms.Padding(7, 2, 0, 2);
-            this.menuStrip1.Size = new System.Drawing.Size(814, 24);
-            this.menuStrip1.TabIndex = 3;
-            this.menuStrip1.Text = "menuStrip1";
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(89, 20);
-            this.toolStripMenuItem1.Text = "Load Preview";
-            this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
-            // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.HSplit;
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer2.IsSplitterFixed = true;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.menuStrip1);
-            this.splitContainer2.Panel1.Controls.Add(this.txtPocoEditor);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.panelMain);
-            this.splitContainer2.Size = new System.Drawing.Size(814, 994);
-            this.splitContainer2.SplitterDistance = 627;
-            this.splitContainer2.SplitterWidth = 5;
-            this.splitContainer2.TabIndex = 0;
-            // 
             // POCOGeneratorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -337,15 +314,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.contextMenu.ResumeLayout(false);
-            this.contextMenuPocoEditor.ResumeLayout(false);
-            this.contextMenuTable.ResumeLayout(false);
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
             this.splitContainer2.Panel1.ResumeLayout(false);
-            this.splitContainer2.Panel1.PerformLayout();
             this.splitContainer2.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
+            this.contextMenuPocoEditor.ResumeLayout(false);
+            this.contextMenuTable.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -371,8 +345,6 @@
         private System.Windows.Forms.ToolStripMenuItem checkRecursivelyTablesConnectedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refreshTableToolStripMenuItem;
         private System.Windows.Forms.SplitContainer splitContainer2;
-        private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.RichTextBox txtPocoEditor;
         private System.Windows.Forms.Panel panelMain;
         internal System.Windows.Forms.TreeView trvServer;

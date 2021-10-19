@@ -44,10 +44,6 @@ namespace POCOGenerator
                 SetConnectionString(connectionString);
                 BuildServerTree();
             }
-            else
-            {
-                this.Close();
-            }
         }
 
         private void POCOGeneratorForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -203,6 +199,8 @@ namespace POCOGenerator
                 };
 
                 DbHelper.BuildServerSchema(Server, InitialCatalog, buildingDbObject, builtDbObject);
+
+                Program.PropertyForm.GetOptions(true, trvServer);
 
                 trvServer.SelectedNode = serverNode;
 
@@ -784,6 +782,8 @@ namespace POCOGenerator
             }
 
             trvServer.AfterCheck += trvServer_AfterCheck;
+
+            Program.PropertyForm.GetOptions(true, trvServer);
         }
 
         private void SetChildrenCheckBoxes(TreeNode root)
@@ -1259,19 +1259,19 @@ namespace POCOGenerator
 
         internal void IterateDbObjects(IDbObjectTraverse dbObject, StringBuilder sb = null)
         {
-            Program.PropertyForm.Iterator = GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb);
+            Program.PropertyForm.LoadConfig(GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb));
             Program.PropertyForm.Iterator.Iterate();
         }
 
         internal void IterateDbObjects(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb = null)
         {
-            Program.PropertyForm.Iterator = GetPOCOIterator(dbObjects, sb);
+            Program.PropertyForm.LoadConfig(GetPOCOIterator(dbObjects, sb));
             Program.PropertyForm.Iterator.Iterate();
         }
 
         private void ClearDbObjects(StringBuilder sb = null)
         {
-            Program.PropertyForm.Iterator = GetPOCOIterator(null, sb);
+            Program.PropertyForm.LoadConfig(GetPOCOIterator(null, sb));
             Program.PropertyForm.Iterator.Clear();
         }
 
@@ -1305,7 +1305,7 @@ namespace POCOGenerator
         private DbIterator GetPOCOIterator(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb)
         {
             IPOCOWriter pocoWriter = GetPOCOWriter(sb);
-            Program.PropertyForm.Iterator = new DbIterator(dbObjects, pocoWriter);
+            Program.PropertyForm.LoadConfig(new DbIterator(dbObjects, pocoWriter));
             return Program.PropertyForm.Iterator;
         }
 
