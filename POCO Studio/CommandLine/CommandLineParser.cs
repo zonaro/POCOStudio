@@ -1,8 +1,8 @@
-﻿using System;
+﻿using CommandLine;
+using InnerLibs;
+using System;
 using System.IO;
 using System.Linq;
-using CommandLine;
-using Microsoft.Data.ConnectionUI;
 
 namespace POCOGenerator.CommandLine
 {
@@ -45,14 +45,7 @@ namespace POCOGenerator.CommandLine
             // connection string validity
             try
             {
-                using (DataConnectionDialog dcd = new DataConnectionDialog())
-                {
-                    dcd.DataSources.Add(DataSource.SqlDataSource);
-                    dcd.DataSources.Add(DataSource.SqlFileDataSource);
-                    dcd.SelectedDataSource = DataSource.SqlDataSource;
-                    dcd.SelectedDataProvider = DataProvider.SqlDataProvider;
-                    dcd.ConnectionString = parsingResult.Options.ConnectionString;
-                }
+                new ConnectionStringParser(parsingResult.Options.ConnectionString);
             }
             catch
             {

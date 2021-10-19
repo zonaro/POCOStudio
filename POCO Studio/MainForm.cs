@@ -1,9 +1,7 @@
 ﻿using Db.DbObject;
 using InnerLibs;
-using POCO_Studio;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -17,23 +15,12 @@ namespace POCOGenerator
 {
     public partial class MainForm : Form
     {
-
-
-
-
-
-        public void DockForm(DockContent Form, DockState State = DockState.Float)
-        {
-            Form.Show(this.dockPanel, State);
-
-        }
+        public void DockForm(DockContent Form, DockState State = DockState.Float) => Form.Show(this.dockPanel, State);
 
         public MainForm()
         {
             InitializeComponent();
             this.dockPanel.Theme = new VS2015DarkTheme();
-
-
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -42,24 +29,20 @@ namespace POCOGenerator
             DockForm(Program.PropertyForm, DockState.DockRight);
         }
 
-
         #region Export
 
         private void openToolStripButton_Click(object sender, EventArgs e)
         {
-
             var pt = txtFolder.Text;
 
             if (!pt.IsPath())
             {
                 txtFolder.Text = new FileInfo(Application.ExecutablePath).Directory.FullName + "\\Export";
-
             }
 
             if (pt.IsFilePath())
             {
                 pt = new FileInfo(txtFolder.Text).Directory.FullName;
-
             }
 
             if (Program.PropertyForm.POCOConfig.IsSingleFile)
@@ -69,7 +52,6 @@ namespace POCOGenerator
                 if (SaveFileDialogExport.ShowDialog(this) == DialogResult.OK)
                 {
                     txtFolder.Text = SaveFileDialogExport.FileName;
-
                 }
             }
             else
@@ -79,16 +61,9 @@ namespace POCOGenerator
                 if (folderBrowserDialogExport.ShowDialog(this) == DialogResult.OK)
                 {
                     txtFolder.Text = folderBrowserDialogExport.SelectedPath;
-
                 }
             }
-
-
         }
-
-
-
-     
 
         private List<IDbObjectTraverse> GetExportObjects()
         {
@@ -130,7 +105,6 @@ namespace POCOGenerator
                 string folder = txtFolder.Text;
                 bool isSingleFile = Program.PropertyForm.POCOConfig.IsSingleFile;
 
-
                 if (txtFolder.Text.IsFilePath())
                 {
                     var fileName = txtFolder.Text;
@@ -144,8 +118,6 @@ namespace POCOGenerator
 
                     Exception error = null;
                     bool succeeded = WritePocoToFile(folder, fileName, sb.ToString(), true, ref error);
-
-
 
                     foreach (var dbObject in exportObjects)
                     {
@@ -219,7 +191,7 @@ namespace POCOGenerator
             public Exception Error { get; set; }
         }
 
-        #endregion
+        #endregion Export
 
         private void txtFolder_Click(object sender, EventArgs e)
         {
@@ -231,8 +203,6 @@ namespace POCOGenerator
             {
                 Process.Start(new FileInfo(txtFolder.Text).Directory.FullName);
             }
-
-
         }
 
         private void saveToolStripButton_Click(object sender, EventArgs e)
@@ -247,7 +217,6 @@ namespace POCOGenerator
 
             if (txtFolder.Text.ToDirectoryInfo().Exists)
             {
-
                 List<IDbObjectTraverse> exportObjects = GetExportObjects();
                 if (exportObjects.Count == 0)
                     return;
@@ -297,16 +266,13 @@ namespace POCOGenerator
             else
             {
                 toolStripStatusLabel.Text = "Failed to access directory";
-
             }
         }
     }
-
 
     internal class NodeTag
     {
         public POCODbType NodeType { get; set; }
         public IDbObject DbObject { get; set; }
     }
-
 }

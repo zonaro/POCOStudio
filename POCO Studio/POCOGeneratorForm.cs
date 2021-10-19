@@ -12,12 +12,15 @@ using Db.DbObject;
 using Db.Helpers;
 using Db.POCOIterator;
 using InnerLibs;
-using Microsoft.Data.ConnectionUI;
+
+using POCO_Studio;
 using POCOGenerator.CommandLine;
 using POCOGenerator.Extensions;
 using POCOGenerator.Helpers;
 using POCOGenerator.POCOWriter;
+
 using WeifenLuo.WinFormsUI.Docking;
+
 namespace POCOGenerator
 {
     public partial class POCOGeneratorForm : DockContent
@@ -31,8 +34,6 @@ namespace POCOGenerator
 
         private void POCOGeneratorForm_Load(object sender, EventArgs e)
         {
-
-
         }
 
         private void POCOGeneratorForm_Shown(object sender, EventArgs e)
@@ -51,7 +52,6 @@ namespace POCOGenerator
 
         private void POCOGeneratorForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -59,98 +59,53 @@ namespace POCOGenerator
             this.Close();
         }
 
-        #endregion
+        #endregion Form
 
         #region Connection String
 
         private string GetConnectionString(string connectionString = null)
         {
-            using (DataConnectionDialog dcd = new DataConnectionDialog())
+            using (var cs = new ConnectionDialog())
             {
-                dcd.DataSources.Add(DataSource.SqlDataSource);
-                dcd.DataSources.Add(DataSource.SqlFileDataSource);
-                dcd.SelectedDataSource = DataSource.SqlDataSource;
-                dcd.SelectedDataProvider = DataProvider.SqlDataProvider;
-
-                try
+                cs.ConnectionstringBox.Text = connectionString.IfBlank("");
+                if (cs.ShowDialog() == DialogResult.OK)
                 {
-                    if (connectionString.IsNotBlank())
-                        dcd.ConnectionString = connectionString;
+                    connectionString = cs.ConnectionstringBox.Text;
                 }
-                catch
-                {
-                }
-
-                if (DataConnectionDialog.Show(dcd) == DialogResult.OK)
-                    return dcd.ConnectionString;
-
-                return null;
             }
+
+            return connectionString;
         }
 
         private void SetConnectionString(string connectionString)
         {
             DbHelper.ConnectionString = connectionString;
 
-            int index = connectionString.IndexOf("Data Source=");
-            if (index != -1)
+            var cs = new ConnectionStringParser(connectionString);
+
+            Server = new Server()
             {
-                string server = connectionString.Substring(index + "Data Source=".Length);
-                index = server.IndexOf(';');
-                if (index != -1)
-                    server = server.Substring(0, index);
-                string instanceName = null;
-                index = server.LastIndexOf("\\");
-                if (index != -1)
-                {
-                    instanceName = server.Substring(index + 1);
-                    server = server.Substring(0, index);
-                }
+                ServerName = cs.GetValueOrDefault("Server"),
+                //InstanceName =
+            };
+            Server.UserId = cs.GetValueOrDefault("User ID");
 
-                Server = new Server()
-                {
-                    ServerName = server,
-                    InstanceName = instanceName
-                };
-
-                index = connectionString.IndexOf("User ID=");
-                if (index != -1)
-                {
-                    string userId = connectionString.Substring(index + "User ID=".Length);
-                    index = userId.IndexOf(';');
-                    if (index != -1)
-                        userId = userId.Substring(0, index);
-                    Server.UserId = userId;
-                }
-                else
-                {
-                    index = connectionString.IndexOf("Integrated Security=True");
-                    if (index != -1)
-                        Server.UserId = WindowsIdentity.GetCurrent().Name;
-                }
-
-                Server.Version = DbHelper.GetServerVersion();
+            if (cs.GetValueOrDefault("Integrated Security") == "True")
+            {
+                Server.UserId = WindowsIdentity.GetCurrent().Name;
             }
 
-            index = connectionString.IndexOf("Initial Catalog=");
-            if (index != -1)
-            {
-                string initialCatalog = connectionString.Substring(index + "Initial Catalog=".Length);
-                index = initialCatalog.IndexOf(';');
-                if (index != -1)
-                    initialCatalog = initialCatalog.Substring(0, index);
-                InitialCatalog = initialCatalog;
-            }
+            Server.Version = DbHelper.GetServerVersion();
+
+            InitialCatalog = cs.GetValueOrDefault("Initial Catalog");
         }
 
-        #endregion
+        #endregion Connection String
 
         #region Server Tree
 
         private Server Server;
         private string InitialCatalog;
-
-
 
         private enum ImageType
         {
@@ -252,8 +207,6 @@ namespace POCOGenerator
                 trvServer.SelectedNode = serverNode;
 
                 EnableServerTree();
-
-
             }
             catch (Exception ex)
             {
@@ -261,7 +214,6 @@ namespace POCOGenerator
                 toolStripStatusLabel.ForeColor = Color.Red;
             }
         }
-
 
         public ToolStripStatusLabel toolStripStatusLabel => Program.MainForm.toolStripStatusLabel;
 
@@ -792,7 +744,7 @@ namespace POCOGenerator
             return tvpNode;
         }
 
-        #endregion
+        #endregion Server Tree
 
         #region Server Tree CheckBoxes
 
@@ -831,7 +783,6 @@ namespace POCOGenerator
                 root = root.Parent;
             }
 
-
             trvServer.AfterCheck += trvServer_AfterCheck;
         }
 
@@ -864,7 +815,7 @@ namespace POCOGenerator
             return true;
         }
 
-        #endregion
+        #endregion Server Tree CheckBoxes
 
         #region Server Tree Context Menu
 
@@ -1212,7 +1163,6 @@ namespace POCOGenerator
                         child1.Checked = false;
                 }
 
-
                 trvServer.AfterCheck += trvServer_AfterCheck;
             }
             else if (nodeType == POCODbType.Tables ||
@@ -1226,7 +1176,6 @@ namespace POCOGenerator
                 node.Checked = false;
                 foreach (TreeNode child in node.Nodes)
                     child.Checked = false;
-
 
                 trvServer.AfterCheck += trvServer_AfterCheck;
             }
@@ -1300,37 +1249,30 @@ namespace POCOGenerator
                     }
                 }
 
-
-
                 trvServer.AfterCheck += trvServer_AfterCheck;
             }
         }
 
-        #endregion
-
-    
-
-
-
+        #endregion Server Tree Context Menu
 
         #region POCO Writer & Iterator
 
         internal void IterateDbObjects(IDbObjectTraverse dbObject, StringBuilder sb = null)
         {
-            DbIterator iterator = GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb);
-            iterator.Iterate();
+            Program.PropertyForm.Iterator = GetPOCOIterator(new IDbObjectTraverse[] { dbObject }, sb);
+            Program.PropertyForm.Iterator.Iterate();
         }
 
         internal void IterateDbObjects(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb = null)
         {
-            DbIterator iterator = GetPOCOIterator(dbObjects, sb);
-            iterator.Iterate();
+            Program.PropertyForm.Iterator = GetPOCOIterator(dbObjects, sb);
+            Program.PropertyForm.Iterator.Iterate();
         }
 
         private void ClearDbObjects(StringBuilder sb = null)
         {
-            DbIterator iterator = GetPOCOIterator(null, sb);
-            iterator.Clear();
+            Program.PropertyForm.Iterator = GetPOCOIterator(null, sb);
+            Program.PropertyForm.Iterator.Clear();
         }
 
         private void WriteErrors(string objectName, IEnumerable<Exception> errors, StringBuilder sb = null)
@@ -1363,8 +1305,8 @@ namespace POCOGenerator
         private DbIterator GetPOCOIterator(IEnumerable<IDbObjectTraverse> dbObjects, StringBuilder sb)
         {
             IPOCOWriter pocoWriter = GetPOCOWriter(sb);
-            DbIterator iterator = new DbIterator(dbObjects, pocoWriter);
-            return iterator;
+            Program.PropertyForm.Iterator = new DbIterator(dbObjects, pocoWriter);
+            return Program.PropertyForm.Iterator;
         }
 
         private IPOCOWriter GetPOCOWriter(StringBuilder sb)
@@ -1375,9 +1317,7 @@ namespace POCOGenerator
                 return new StringBuilderWriterFactory(sb).CreatePOCOWriter();
         }
 
-
-
-        #endregion
+        #endregion POCO Writer & Iterator
 
         #region POCO Editor
 
@@ -1409,8 +1349,6 @@ namespace POCOGenerator
                     GetSelectedObjects(child, selectedObjects);
             }
         }
-
-
 
         private List<IDbObjectTraverse> selectedObjectsPrevious = new List<IDbObjectTraverse>();
         private TreeNode selectedNodePrevious;
@@ -1489,7 +1427,7 @@ namespace POCOGenerator
             selectedNodePrevious = selectedNode;
         }
 
-        #endregion
+        #endregion POCO Editor
 
         #region Copy
 
@@ -1518,9 +1456,7 @@ namespace POCOGenerator
             txtPocoEditor.Focus();
         }
 
-        #endregion
-
-
+        #endregion Copy
 
         #region Type Mapping
 
@@ -1533,7 +1469,7 @@ namespace POCOGenerator
             typeMappingForm.ShowDialog(this);
         }
 
-        #endregion
+        #endregion Type Mapping
 
         #region Command Line
 
@@ -1550,20 +1486,11 @@ namespace POCOGenerator
             commandLineForm.ShowDialog(this);
         }
 
-
-
-        #endregion
-
-
-
-
-
-
+        #endregion Command Line
 
         private void toolStripMenuItem1_Click(object sender, EventArgs e)
         {
             WritePocoToEditor();
-
         }
     }
 }
