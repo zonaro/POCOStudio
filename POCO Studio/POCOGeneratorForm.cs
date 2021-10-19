@@ -38,11 +38,12 @@ namespace POCOGenerator
 
         private void POCOGeneratorForm_Shown(object sender, EventArgs e)
         {
-            string connectionString = GetConnectionString(DbHelper.ConnectionString);
-            if (string.IsNullOrEmpty(connectionString) == false)
+            GetConnectionString();
+            if (DbHelper.ConnectionString.IsNotBlank())
             {
-                SetConnectionString(connectionString);
+                SetConnectionString(DbHelper.ConnectionString);
                 BuildServerTree();
+                GetPOCOIterator(GetSelectedObjects(), null);
             }
         }
 
@@ -59,41 +60,45 @@ namespace POCOGenerator
 
         #region Connection String
 
-        private string GetConnectionString(string connectionString = null)
+        private string GetConnectionString()
         {
             using (var cs = new ConnectionDialog())
             {
-                cs.ConnectionstringBox.Text = connectionString.IfBlank("");
+                var ConnectionString = DbHelper.ConnectionString;
+                if (File.Exists(Program.PropertyForm.settingsFileName))
+                    ConnectionString = SerializationHelper.BinaryDeserializeFromFile<Options>(Program.PropertyForm.settingsFileName)?.ConnectionString ?? DbHelper.ConnectionString;
+
+                cs.LoadConnectionString(ConnectionString);
                 if (cs.ShowDialog() == DialogResult.OK)
                 {
-                    connectionString = cs.ConnectionstringBox.Text;
+                    DbHelper.ConnectionString = cs.ConnectionstringBox.Text;
                 }
             }
 
-            return connectionString;
+            return DbHelper.ConnectionString;
         }
 
         private void SetConnectionString(string connectionString)
         {
             DbHelper.ConnectionString = connectionString;
 
-            var cs = new ConnectionStringParser(connectionString);
+            var cs = new SqlServerConnectionsStringParser(connectionString);
 
             Server = new Server()
             {
-                ServerName = cs.GetValueOrDefault("Server"),
-                //InstanceName =
+                ServerName = cs.Server
             };
-            Server.UserId = cs.GetValueOrDefault("User ID");
 
-            if (cs.GetValueOrDefault("Integrated Security") == "True")
+            Server.UserId = cs.UserID;
+
+            if (cs.IntegratedSecurity)
             {
                 Server.UserId = WindowsIdentity.GetCurrent().Name;
             }
 
             Server.Version = DbHelper.GetServerVersion();
 
-            InitialCatalog = cs.GetValueOrDefault("Initial Catalog");
+            InitialCatalog = cs.InitialCatalog;
         }
 
         #endregion Connection String

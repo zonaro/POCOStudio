@@ -27,33 +27,57 @@ namespace POCO_Studio
             this.Close();
         }
 
-        public ConnectionStringParser Parser = new ConnectionStringParser();
+        public SqlServerConnectionsStringParser Parser = new SqlServerConnectionsStringParser();
 
         private void ConnectionstringBox_TextChanged(object sender, EventArgs e)
         {
+
+        }
+
+
+        public SqlServerConnectionsStringParser LoadConnectionString(string ConnectionString)
+        {
+            try
+            {
+                Parser ??= new SqlServerConnectionsStringParser();
+                Parser.ConnectionString = ConnectionString;
+                ServerBox.Text = Parser.Server;
+                UserBox.Text = Parser.UserID;
+                PasswordBox.Text = Parser.Password;
+                DatabaseBox.Text = Parser.InitialCatalog;
+                SecurityBox.Checked = Parser.IntegratedSecurity;
+                ConnectionstringBox.Text = Parser.ConnectionString;
+            }
+            catch
+            {
+
+            }
+
+            return Parser;
+
         }
 
         private void ServerBox_TextChanged(object sender, EventArgs e)
         {
-            Parser.Set("Server", ServerBox.Text);
+            Parser.Server = ServerBox.Text;
             ConnectionstringBox.Text = Parser.ToString();
         }
 
         private void UserBox_TextChanged(object sender, EventArgs e)
         {
-            Parser.Set("User ID", UserBox.Text);
+            Parser.UserID = UserBox.Text;
             ConnectionstringBox.Text = Parser.ToString();
         }
 
         private void PasswordBox_TextChanged(object sender, EventArgs e)
         {
-            Parser.Set("Password", PasswordBox.Text);
+            Parser.Password = PasswordBox.Text;
             ConnectionstringBox.Text = Parser.ToString();
         }
 
         private void DatabaseBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            Parser.Set("Initial Catalog", DatabaseBox.Text);
+            Parser.InitialCatalog = DatabaseBox.Text;
             ConnectionstringBox.Text = Parser.ToString();
         }
 
@@ -80,13 +104,13 @@ namespace POCO_Studio
             {
                 groupBox1.Enabled = false;
                 Parser.RemoveIfExist("User ID", "Password");
-                Parser.Set("Integrated Security", "True");
+                Parser.IntegratedSecurity = true;
             }
             else
             {
                 groupBox1.Enabled = true;
-                Parser.Set("User ID", UserBox.Text);
-                Parser.Set("Password", PasswordBox.Text);
+                Parser.UserID = UserBox.Text;
+                Parser.Password = PasswordBox.Text;
                 Parser.RemoveIfExist("Integrated Security");
             }
 
@@ -109,6 +133,11 @@ namespace POCO_Studio
             try
             {
                 ConnectionstringBox.Text = Parser.Parse(ConnectionstringBox.Text);
+                UserBox.Text = Parser.UserID;
+                PasswordBox.Text = Parser.Password;
+                SecurityBox.Checked = Parser.IntegratedSecurity;
+                ServerBox.Text = Parser.Server;
+                DatabaseBox.Text = Parser.InitialCatalog;
             }
             catch { ConnectionstringBox.Text = old; }
         }

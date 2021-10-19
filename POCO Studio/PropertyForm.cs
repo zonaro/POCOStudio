@@ -14,7 +14,7 @@ namespace POCO_Studio
 {
     public partial class PropertyForm : DockContent
     {
-        public Options POCOConfig { get => Iterator.POCOConfiguration; set => Iterator.POCOConfiguration = value; }
+        public Options POCOConfig { get => Iterator?.POCOConfiguration; set { if (Iterator != null) Iterator.POCOConfiguration = value; } }
 
         public DbIterator Iterator { get; set; }
 
@@ -44,7 +44,7 @@ namespace POCO_Studio
             this.GRID.SelectedObject = this.POCOConfig;
         }
 
-        private string settingsFileName => $"configuration.settings";
+        public string settingsFileName => $"configuration.settings";
 
         private void LoadOptions()
         {
