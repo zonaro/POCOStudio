@@ -103,7 +103,6 @@ namespace POCOGenerator
             if (exportObjects.Count > 0)
             {
                 string folder = txtFolder.Text;
-                bool isSingleFile = Program.PropertyForm.POCOConfig.IsSingleFile;
 
                 if (txtFolder.Text.IsFilePath())
                 {
@@ -267,6 +266,16 @@ namespace POCOGenerator
             {
                 toolStripStatusLabel.Text = "Failed to access directory";
             }
+        }
+
+
+        private TypeMappingForm typeMappingForm;
+
+        private void helpToolStripButton_Click(object sender, EventArgs e)
+        {
+            if (typeMappingForm == null)
+                typeMappingForm = new TypeMappingForm();
+            typeMappingForm.ShowDialog(this);
         }
     }
 

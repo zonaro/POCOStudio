@@ -205,6 +205,8 @@ namespace POCOGenerator
 
                 DbHelper.BuildServerSchema(Server, InitialCatalog, buildingDbObject, builtDbObject);
 
+                Program.PropertyForm.Iterator = GetPOCOIterator(GetSelectedObjects(), null);
+
                 Program.PropertyForm.GetOptions(true, trvServer);
 
                 trvServer.SelectedNode = serverNode;
@@ -1465,13 +1467,10 @@ namespace POCOGenerator
 
         #region Type Mapping
 
-        private TypeMappingForm typeMappingForm;
 
         private void btnTypeMapping_Click(object sender, EventArgs e)
         {
-            if (typeMappingForm == null)
-                typeMappingForm = new TypeMappingForm();
-            typeMappingForm.ShowDialog(this);
+            
         }
 
         #endregion Type Mapping
