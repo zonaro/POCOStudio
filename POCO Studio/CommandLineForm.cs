@@ -22,7 +22,6 @@ namespace POCOGenerator
         }
 
         private static readonly Regex regexCamelCase = new Regex("(?<word>[A-Z]{2,}|[A-Z][^A-Z]*?|^[^A-Z]*?)(?=[A-Z]|$)", RegexOptions.Compiled);
-
         private void SetCommandLineHelp()
         {
             List<Tuple<string, string>> help = CommandLineParser<Options>.GetCommandLineHelp();

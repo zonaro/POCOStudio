@@ -21,6 +21,7 @@ namespace POCO_Studio
         public PropertyForm()
         {
             InitializeComponent();
+           
         }
 
         private void PropertyForm_FormClosing(object sender, FormClosingEventArgs e)

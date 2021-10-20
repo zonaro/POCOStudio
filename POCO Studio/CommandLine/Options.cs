@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Xml.Serialization;
 using CommandLine;
 using Db.POCOIterator;
@@ -9,10 +10,6 @@ namespace POCOGenerator.CommandLine
     [Serializable]
     public class Options
     {
-
-
-
-
         #region Connection String
 
         [Option("ConnectionString", "Connection String")]
@@ -199,7 +196,8 @@ namespace POCOGenerator.CommandLine
 
         public bool IsEFCore { get; set; }
 
-
+        [DisplayName("Entity Framework")]
+        [Description("Enable Entity Framework Options")]
         [Option("EF", "Entity Framework")]
         public bool IsEF { get; set; }
 

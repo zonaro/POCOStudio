@@ -30,21 +30,12 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(POCOGeneratorForm));
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.trvServer = new System.Windows.Forms.TreeView();
             this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.removeFilterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.filterSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearCheckBoxesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListDbObjects = new System.Windows.Forms.ImageList(this.components);
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.txtPocoEditor = new System.Windows.Forms.RichTextBox();
-            this.contextMenuPocoEditor = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.selectAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panelMain = new System.Windows.Forms.Panel();
-            this.folderBrowserDialogExport = new System.Windows.Forms.FolderBrowserDialog();
             this.contextMenuTable = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.checkTablesConnectedFromToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkTablesConnectedToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -53,58 +44,13 @@
             this.checkRecursivelyTablesConnectedToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkRecursivelyTablesConnectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
+            this.trvServer = new System.Windows.Forms.TreeView();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.contextMenu.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
-            this.splitContainer2.Panel1.SuspendLayout();
-            this.splitContainer2.Panel2.SuspendLayout();
-            this.splitContainer2.SuspendLayout();
-            this.contextMenuPocoEditor.SuspendLayout();
             this.contextMenuTable.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.trvServer);
-            this.splitContainer1.Panel1MinSize = 200;
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Panel2MinSize = 650;
-            this.splitContainer1.Size = new System.Drawing.Size(1297, 994);
-            this.splitContainer1.SplitterDistance = 478;
-            this.splitContainer1.SplitterWidth = 5;
-            this.splitContainer1.TabIndex = 0;
-            // 
-            // trvServer
-            // 
-            this.trvServer.CheckBoxes = true;
-            this.trvServer.ContextMenuStrip = this.contextMenu;
-            this.trvServer.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.trvServer.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
-            this.trvServer.HideSelection = false;
-            this.trvServer.ImageIndex = 0;
-            this.trvServer.ImageList = this.imageListDbObjects;
-            this.trvServer.Location = new System.Drawing.Point(0, 0);
-            this.trvServer.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.trvServer.Name = "trvServer";
-            this.trvServer.SelectedImageIndex = 0;
-            this.trvServer.Size = new System.Drawing.Size(478, 994);
-            this.trvServer.TabIndex = 1;
-            this.trvServer.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.trvServer_AfterCheck);
-            this.trvServer.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.trvServer_DrawNode);
-            this.trvServer.MouseUp += new System.Windows.Forms.MouseEventHandler(this.trvServer_MouseUp);
             // 
             // contextMenu
             // 
@@ -161,77 +107,6 @@
             this.imageListDbObjects.Images.SetKeyName(9, "FK.gif");
             this.imageListDbObjects.Images.SetKeyName(10, "UK.gif");
             this.imageListDbObjects.Images.SetKeyName(11, "Index.gif");
-            // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.HSplit;
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer2.IsSplitterFixed = true;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.txtPocoEditor);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.panelMain);
-            this.splitContainer2.Size = new System.Drawing.Size(814, 994);
-            this.splitContainer2.SplitterDistance = 626;
-            this.splitContainer2.SplitterWidth = 5;
-            this.splitContainer2.TabIndex = 0;
-            // 
-            // txtPocoEditor
-            // 
-            this.txtPocoEditor.BackColor = System.Drawing.Color.White;
-            this.txtPocoEditor.ContextMenuStrip = this.contextMenuPocoEditor;
-            this.txtPocoEditor.DetectUrls = false;
-            this.txtPocoEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtPocoEditor.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.txtPocoEditor.Location = new System.Drawing.Point(0, 0);
-            this.txtPocoEditor.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.txtPocoEditor.Name = "txtPocoEditor";
-            this.txtPocoEditor.ReadOnly = true;
-            this.txtPocoEditor.Size = new System.Drawing.Size(814, 626);
-            this.txtPocoEditor.TabIndex = 0;
-            this.txtPocoEditor.Text = "";
-            this.txtPocoEditor.WordWrap = false;
-            // 
-            // contextMenuPocoEditor
-            // 
-            this.contextMenuPocoEditor.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.copyToolStripMenuItem,
-            this.selectAllToolStripMenuItem});
-            this.contextMenuPocoEditor.Name = "contextMenuPocoEditor";
-            this.contextMenuPocoEditor.Size = new System.Drawing.Size(123, 48);
-            // 
-            // copyToolStripMenuItem
-            // 
-            this.copyToolStripMenuItem.Image = ((System.Drawing.Image)(resources.GetObject("copyToolStripMenuItem.Image")));
-            this.copyToolStripMenuItem.Name = "copyToolStripMenuItem";
-            this.copyToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
-            this.copyToolStripMenuItem.Text = "Copy";
-            this.copyToolStripMenuItem.Click += new System.EventHandler(this.copyToolStripMenuItem_Click);
-            // 
-            // selectAllToolStripMenuItem
-            // 
-            this.selectAllToolStripMenuItem.Name = "selectAllToolStripMenuItem";
-            this.selectAllToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
-            this.selectAllToolStripMenuItem.Text = "Select All";
-            this.selectAllToolStripMenuItem.Click += new System.EventHandler(this.selectAllToolStripMenuItem_Click);
-            // 
-            // panelMain
-            // 
-            this.panelMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelMain.Location = new System.Drawing.Point(0, 0);
-            this.panelMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.panelMain.Name = "panelMain";
-            this.panelMain.Size = new System.Drawing.Size(814, 363);
-            this.panelMain.TabIndex = 0;
             // 
             // contextMenuTable
             // 
@@ -295,42 +170,71 @@
             this.refreshTableToolStripMenuItem.Text = "Refresh";
             this.refreshTableToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
+            // trvServer
+            // 
+            this.trvServer.CheckBoxes = true;
+            this.trvServer.ContextMenuStrip = this.contextMenu;
+            this.trvServer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.trvServer.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
+            this.trvServer.HideSelection = false;
+            this.trvServer.ImageIndex = 0;
+            this.trvServer.ImageList = this.imageListDbObjects;
+            this.trvServer.Location = new System.Drawing.Point(0, 25);
+            this.trvServer.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.trvServer.Name = "trvServer";
+            this.trvServer.SelectedImageIndex = 0;
+            this.trvServer.Size = new System.Drawing.Size(281, 190);
+            this.trvServer.TabIndex = 1;
+            this.trvServer.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.trvServer_AfterCheck);
+            this.trvServer.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.trvServer_DrawNode);
+            this.trvServer.MouseUp += new System.Windows.Forms.MouseEventHandler(this.trvServer_MouseUp);
+            // 
+            // toolStrip1
+            // 
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButton1});
+            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.Size = new System.Drawing.Size(281, 25);
+            this.toolStrip1.TabIndex = 3;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripButton1
+            // 
+            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(91, 22);
+            this.toolStripButton1.Text = "Open Database";
+            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
+            // 
             // POCOGeneratorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1297, 994);
-            this.Controls.Add(this.splitContainer1);
+            this.ClientSize = new System.Drawing.Size(281, 215);
+            this.Controls.Add(this.trvServer);
+            this.Controls.Add(this.toolStrip1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.MinimumSize = new System.Drawing.Size(1281, 859);
             this.Name = "POCOGeneratorForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "POCO Generator";
+            this.Text = "Databases";
+            this.TopMost = true;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.POCOGeneratorForm_FormClosing);
             this.Load += new System.EventHandler(this.POCOGeneratorForm_Load);
             this.Shown += new System.EventHandler(this.POCOGeneratorForm_Shown);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
             this.contextMenu.ResumeLayout(false);
-            this.splitContainer2.Panel1.ResumeLayout(false);
-            this.splitContainer2.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
-            this.splitContainer2.ResumeLayout(false);
-            this.contextMenuPocoEditor.ResumeLayout(false);
             this.contextMenuTable.ResumeLayout(false);
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.ContextMenuStrip contextMenuPocoEditor;
-        private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem selectAllToolStripMenuItem;
-        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialogExport;
         private System.Windows.Forms.ContextMenuStrip contextMenu;
         private System.Windows.Forms.ToolStripMenuItem refreshToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeFilterToolStripMenuItem;
@@ -344,10 +248,9 @@
         private System.Windows.Forms.ToolStripMenuItem checkRecursivelyTablesConnectedToToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem checkRecursivelyTablesConnectedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refreshTableToolStripMenuItem;
-        private System.Windows.Forms.SplitContainer splitContainer2;
-        private System.Windows.Forms.RichTextBox txtPocoEditor;
-        private System.Windows.Forms.Panel panelMain;
-        internal System.Windows.Forms.TreeView trvServer;
         public System.Windows.Forms.ImageList imageListDbObjects;
+        internal System.Windows.Forms.TreeView trvServer;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton toolStripButton1;
     }
 }

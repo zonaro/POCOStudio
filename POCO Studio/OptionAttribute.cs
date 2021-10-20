@@ -2,15 +2,19 @@
 
 namespace CommandLine
 {
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class OptionAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class OptionAttribute : Attribute 
     {
         public char? ShortOption { get; private set; }
         public string LongOption { get; private set; }
-        public string Description { get; private set; }
+        public string Description { get; private set; }  
         public bool Required { get; private set; }
         public object Default { get; private set; }
         public string MutuallyExclusiveSet { get; private set; }
+
+        public string DisplayName { get; set; }
+ 
+
 
         public OptionAttribute(string Description = null, bool Required = false, object Default = null, string MutuallyExclusiveSet = null)
         {

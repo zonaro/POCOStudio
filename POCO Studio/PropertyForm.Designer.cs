@@ -29,16 +29,18 @@ namespace POCO_Studio
         /// </summary>
         private void InitializeComponent()
         {
-            this.GRID = new System.Windows.Forms.PropertyGrid();
             this.SuspendLayout();
-            // 
-            // GRID
-            // 
+
+            //// 
+            //// GRID
+            //// 
+            this.GRID = new System.Windows.Forms.PropertyGrid();      
             this.GRID.Dock = System.Windows.Forms.DockStyle.Fill;
             this.GRID.Location = new System.Drawing.Point(0, 0);
             this.GRID.Name = "GRID";
-            this.GRID.Size = new System.Drawing.Size(800, 450);
             this.GRID.TabIndex = 0;
+
+
             // 
             // PropertyForm
             // 

@@ -30,6 +30,7 @@ namespace POCOGenerator
         public POCOGeneratorForm()
         {
             InitializeComponent();
+
         }
 
         private void POCOGeneratorForm_Load(object sender, EventArgs e)
@@ -38,23 +39,17 @@ namespace POCOGenerator
 
         private void POCOGeneratorForm_Shown(object sender, EventArgs e)
         {
-            GetConnectionString();
-            if (DbHelper.ConnectionString.IsNotBlank())
-            {
-                SetConnectionString(DbHelper.ConnectionString);
-                BuildServerTree();
-                GetPOCOIterator(GetSelectedObjects(), null);
-            }
+
         }
 
         private void POCOGeneratorForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+
+
+            e.Cancel = true;
+            this.Hide();
         }
 
-        private void btnClose_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
 
         #endregion Form
 
@@ -1318,10 +1313,10 @@ namespace POCOGenerator
 
         private IPOCOWriter GetPOCOWriter(StringBuilder sb)
         {
-            if (sb == null)
-                return new RichTextBoxWriterFactory(txtPocoEditor).CreatePOCOWriter();
-            else
-                return new StringBuilderWriterFactory(sb).CreatePOCOWriter();
+            //if (sb != null)
+            return new StringBuilderWriterFactory(sb).CreatePOCOWriter();
+            //else
+            //return new RichTextBoxWriterFactory(RichTextBox1).CreatePOCOWriter();
         }
 
         #endregion POCO Writer & Iterator
@@ -1436,41 +1431,14 @@ namespace POCOGenerator
 
         #endregion POCO Editor
 
-        #region Copy
 
-        private void btnCopy_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Clipboard.SetText(txtPocoEditor.Text);
-            }
-            catch { }
-        }
-
-        private void copyToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                Clipboard.SetText(txtPocoEditor.SelectedText ?? string.Empty);
-            }
-            catch { }
-            txtPocoEditor.Focus();
-        }
-
-        private void selectAllToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            txtPocoEditor.SelectAll();
-            txtPocoEditor.Focus();
-        }
-
-        #endregion Copy
 
         #region Type Mapping
 
 
         private void btnTypeMapping_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         #endregion Type Mapping
@@ -1495,6 +1463,17 @@ namespace POCOGenerator
         private void toolStripMenuItem1_Click(object sender, EventArgs e)
         {
             WritePocoToEditor();
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            GetConnectionString();
+            if (DbHelper.ConnectionString.IsNotBlank())
+            {
+                SetConnectionString(DbHelper.ConnectionString);
+                BuildServerTree();
+                GetPOCOIterator(GetSelectedObjects(), null);
+            }
         }
     }
 }

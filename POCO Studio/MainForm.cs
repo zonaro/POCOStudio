@@ -21,11 +21,14 @@ namespace POCOGenerator
         {
             InitializeComponent();
             this.dockPanel.Theme = new VS2015DarkTheme();
+            this.dockPanel.Theme.ApplyTo(this.toolStrip1);
+            this.dockPanel.Theme.ApplyTo(this.statusStrip1);
+            this.dockPanel.Theme.ApplyTo(this.menuStrip1);
+       
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            DockForm(Program.PocoForm, DockState.DockLeft);
             DockForm(Program.PropertyForm, DockState.DockRight);
         }
 
@@ -206,7 +209,6 @@ namespace POCOGenerator
 
         private void saveToolStripButton_Click(object sender, EventArgs e)
         {
-            Program.PropertyForm.SaveOptions();
         }
 
         private void copyToolStripButton_Click(object sender, EventArgs e)
@@ -273,9 +275,41 @@ namespace POCOGenerator
 
         private void helpToolStripButton_Click(object sender, EventArgs e)
         {
+            
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            DockForm(Program.PocoForm, DockState.DockLeft);
+
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Environment.Exit(-1);
+        }
+
+        private void typeReferenceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
             if (typeMappingForm == null)
                 typeMappingForm = new TypeMappingForm();
             typeMappingForm.ShowDialog(this);
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Program.PropertyForm.SaveOptions();
+
+        }
+
+        private void pOCOConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void databaseViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            
         }
     }
 
